@@ -18,7 +18,7 @@ x86-64-inventec-d10064-r0:
       --stop=1
 
     kernel:
-      <<: *kernel-3-16
+      <<: *kernel-4-14
 
     args: >-
       nopat
