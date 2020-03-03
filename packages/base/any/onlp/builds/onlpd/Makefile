@@ -27,7 +27,8 @@ include $(ONL)/make/any.mk
 MODULE := onlpd-module
 include $(BUILDER)/standardinit.mk
 
-DEPENDMODULES := AIM
+DEPENDMODULES := $(DEPENDMODULES) AIM IOF sff cjson cjson_util timer_wheel OS uCli BigList ELS
+DEPENDMODULE_HEADERS := $(DEPENDMODULE_HEADERS) AIM IOF sff cjson cjson_util timer_wheel OS uCli BigList ELS
 
 include $(BUILDER)/dependmodules.mk
 
@@ -42,9 +43,11 @@ GLOBAL_CFLAGS += -DAIM_CONFIG_INCLUDE_MODULES_INIT=1
 GLOBAL_CFLAGS += -DAIM_CONFIG_INCLUDE_MAIN=1
 GLOBAL_CFLAGS += -DAIM_CONFIG_INCLUDE_DAEMONIZE=1
 GLOBAL_CFLAGS += -DAIM_CONFIG_INCLUDE_PVS_SYSLOG=1
+GLOBAL_CFLAGS += -DUCLI_CONFIG_INCLUDE_ELS_LOOP=1
+GLOBAL_CFLAGS += -DONLP_CONFIG_INCLUDE_UCLI=1
 
 GLOBAL_LINK_LIBS += $(LIBONLP_SO) -Wl,--unresolved-symbols=ignore-in-shared-libs
-GLOBAL_LINK_LIBS += -lpthread -lm -lrt
+GLOBAL_LINK_LIBS += -lpthread -lm -lrt -ledit
 
 include $(BUILDER)/targets.mk
 
