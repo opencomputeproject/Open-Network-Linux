@@ -1,0 +1,52 @@
+###############################################################################
+#
+# x86_64_accton_as9716_32d Autogeneration Definitions.
+#
+###############################################################################
+
+cdefs: &cdefs
+- X86_64_ACCTON_AS9716_32D_CONFIG_INCLUDE_LOGGING:
+    doc: "Include or exclude logging."
+    default: 1
+- X86_64_ACCTON_AS9716_32D_CONFIG_LOG_OPTIONS_DEFAULT:
+    doc: "Default enabled log options."
+    default: AIM_LOG_OPTIONS_DEFAULT
+- X86_64_ACCTON_AS9716_32D_CONFIG_LOG_BITS_DEFAULT:
+    doc: "Default enabled log bits."
+    default: AIM_LOG_BITS_DEFAULT
+- X86_64_ACCTON_AS9716_32D_CONFIG_LOG_CUSTOM_BITS_DEFAULT:
+    doc: "Default enabled custom log bits."
+    default: 0
+- X86_64_ACCTON_AS9716_32D_CONFIG_PORTING_STDLIB:
+    doc: "Default all porting macros to use the C standard libraries."
+    default: 1
+- X86_64_ACCTON_AS9716_32D_CONFIG_PORTING_INCLUDE_STDLIB_HEADERS:
+    doc: "Include standard library headers for stdlib porting macros."
+    default: x86_64_accton_as9716_32d_CONFIG_PORTING_STDLIB
+- X86_64_ACCTON_AS9716_32D_CONFIG_INCLUDE_UCLI:
+    doc: "Include generic uCli support."
+    default: 0
+- X86_64_ACCTON_AS5812_54X_CONFIG_INCLUDE_DEFAULT_FAN_DIRECTION:
+    doc: "Assume chassis fan direction is the same as the PSU fan direction."
+    default: 0
+- x86_64_accton_as5812_54x_CONFIG_SYS_FAN_FRONT_RPM_MAX:
+    doc: "Maximum system fan(Front) rpm."
+    default: 21500
+
+definitions:
+  cdefs:
+    X86_64_ACCTON_AS9716_32D_CONFIG_HEADER:
+      defs: *cdefs
+      basename: x86_64_accton_as9716_32d_config
+
+  portingmacro:
+    x86_64_accton_as9716_32d:
+      macros:
+        - malloc
+        - free
+        - memset
+        - memcpy
+        - strncpy
+        - vsnprintf
+        - snprintf
+        - strlen
