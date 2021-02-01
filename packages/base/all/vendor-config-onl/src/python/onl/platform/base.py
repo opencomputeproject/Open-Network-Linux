@@ -609,6 +609,10 @@ class OnlPlatformPortConfig_6x400_48x50(object):
     PORT_COUNT=54
     PORT_CONFIG="6x400 + 48x50"
 
+class OnlPlatformPortConfig_6x10_8x1_4x1(object):
+    PORT_COUNT=18
+    PORT_CONFIG="6x10 + 8x1 + 4x1"
+
 class OnlPlatformPortConfig_10x400_18x100_2x10(object):
     PORT_COUNT=30
     PORT_CONFIG="10x400 + 18x100 + 2x10"
