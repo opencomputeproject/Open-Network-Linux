@@ -60,7 +60,7 @@ enum onlp_thermal_id
 int bmc_send_command(char *cmd);
 int bmc_file_read_str(char *file, char *result, int slen);
 int bmc_file_read_int(int* value, char *file, int base);
-int bmc_i2c_readb(uint8_t bus, uint8_t devaddr, uint8_t addr);
+int bmc_i2c_readb(uint8_t bus, uint8_t devaddr, int16_t addr);
 int bmc_i2c_writeb(uint8_t bus, uint8_t devaddr, uint8_t addr, uint8_t value);
 int bmc_i2c_write_quick_mode(uint8_t bus, uint8_t devaddr, uint8_t value);
 int bmc_i2c_readw(uint8_t bus, uint8_t devaddr, uint8_t addr);

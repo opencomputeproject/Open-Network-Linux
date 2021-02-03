@@ -39,15 +39,16 @@
 #define PSU1_ID 1
 #define PSU2_ID 2
 
+#define PSU_I2CBUS          7
 #define SYS_CPLD_PATH_FMT	"/sys/bus/i2c/drivers/syscpld/12-0031/%s"
 #define PSU_PRESENT_FMT		"psu%d_present"
 #define PSU_PWROK_FMT		"psu%d_output_pwr_sts"
 
-#define PSU_PFE1100_PATH_FMT	"/sys/bus/i2c/devices/7-%s/%s\r\n"
+#define PSU_PFE1100_PATH_FMT	"/sys/bus/i2c/devices/%d-00%02x/%s\r\n"
 #define PSU_PFE1100_MODEL	"mfr_model_label"
 #define PSU_PFE1100_SERIAL	"mfr_serial_label"
 
-static const char *psu_pfedrv_i2c_devaddr[] = {"0059", "005a"};
+static const uint8_t pmbus_addr[] = {0x5a, 0x59};
 
 /*
  * Get all information about the given PSU oid.
@@ -66,7 +67,7 @@ static onlp_psu_info_t pinfo[] =
 int
 onlp_psui_init(void)
 {
-    return ONLP_STATUS_OK;
+    return bmc_tty_init();
 }
 
 static int
@@ -96,6 +97,7 @@ onlp_psui_info_get(onlp_oid_t id, onlp_psu_info_t* info)
     int pid, value, addr, ret = 0;
     char file[32] = {0};
     char path[80] = {0};
+    int bus = PSU_I2CBUS;
     
     VALIDATE(id);
 
@@ -124,9 +126,28 @@ onlp_psui_info_get(onlp_oid_t id, onlp_psu_info_t* info)
         return ONLP_STATUS_OK;
     }
     info->status |= ONLP_PSU_STATUS_PRESENT;
-    info->caps = ONLP_PSU_CAPS_AC; 
+    info->caps = ONLP_PSU_CAPS_AC;
 
-    /* Get power good status 
+
+    /* Get model name */
+    ret = snprintf(path, sizeof(path), PSU_PFE1100_PATH_FMT, bus,
+                   pmbus_addr[pid - PSU1_ID], PSU_PFE1100_MODEL);
+    if( ret >= sizeof(path) ) {
+        AIM_LOG_ERROR("path size overwrite (%d,%d)\r\n", ret, sizeof(path));
+        return ONLP_STATUS_E_INTERNAL;
+    }
+    bmc_file_read_str(path, info->model, sizeof(info->model));
+
+    /* Get serial number */
+    ret = snprintf(path, sizeof(path), PSU_PFE1100_PATH_FMT, bus,
+                   pmbus_addr[pid - PSU1_ID], PSU_PFE1100_SERIAL);
+    if( ret >= sizeof(path) ) {
+        AIM_LOG_ERROR("path size overwrite (%d,%d)\r\n", ret, sizeof(path));
+        return ONLP_STATUS_E_INTERNAL;
+    }
+    bmc_file_read_str(path, info->serial, sizeof(info->serial));
+
+    /* Get power good status
      */
     ret = snprintf(file, sizeof(file), PSU_PWROK_FMT, pid);
     if( ret >= sizeof(file) ){
@@ -148,26 +169,33 @@ onlp_psui_info_get(onlp_oid_t id, onlp_psu_info_t* info)
         return ONLP_STATUS_OK;
     }
 
-
-    /* Get input output power status
+    /* open i2c mux channels for PSUs
      */
-    value = (pid == PSU1_ID) ? 0x2 : 0x1; /* mux channel for psu */
-    if (bmc_i2c_write_quick_mode(7, 0x70, value) < 0) {
-        AIM_LOG_ERROR("Unable to set i2c device (7/0x70)\r\n");
+    addr = 0x70;
+    value = bmc_i2c_readb(bus, addr, -1);
+    if (value >= 0) {
+        value |= 0x03; /*Open both PSU channels.*/
+        if (bmc_i2c_write_quick_mode(bus, addr, value) < 0) {
+            AIM_LOG_ERROR("Unable to set i2c device (%d/0x%02x)\r\n",
+                          bus, addr);
+            return ONLP_STATUS_E_INTERNAL;
+        }
+    } else {
+        AIM_LOG_ERROR("Unable to get i2c device (%d/0x%02x)\r\n", bus, addr);
         return ONLP_STATUS_E_INTERNAL;
     }
     usleep(1200);
 
     /* Read vin */
-    addr  = (pid == PSU1_ID) ? 0x59 : 0x5a;
-    value = bmc_i2c_readw(7, addr, 0x88);
+    addr  = pmbus_addr[pid - PSU1_ID];
+    value = bmc_i2c_readw(bus, addr, 0x88);
     if (value >= 0) {
         info->mvin = pmbus_parse_literal_format(value);
         info->caps |= ONLP_PSU_CAPS_VIN;
     }
 
     /* Read iin */
-    value = bmc_i2c_readw(7, addr, 0x89);
+    value = bmc_i2c_readw(bus, addr, 0x89);
     if (value >= 0) {
         info->miin = pmbus_parse_literal_format(value);
         info->caps |= ONLP_PSU_CAPS_IIN;
@@ -180,14 +208,14 @@ onlp_psui_info_get(onlp_oid_t id, onlp_psu_info_t* info)
     }
 
     /* Read iout */
-    value = bmc_i2c_readw(7, addr, 0x8c);
+    value = bmc_i2c_readw(bus, addr, 0x8c);
     if (value >= 0) {
         info->miout = pmbus_parse_literal_format(value);
         info->caps |= ONLP_PSU_CAPS_IOUT;
     }
 
     /* Read pout */
-    value = bmc_i2c_readw(7, addr, 0x96);
+    value = bmc_i2c_readw(bus, addr, 0x96);
     if (value >= 0) {
         info->mpout = pmbus_parse_literal_format(value);
         info->caps |= ONLP_PSU_CAPS_POUT;
@@ -195,25 +223,10 @@ onlp_psui_info_get(onlp_oid_t id, onlp_psu_info_t* info)
 
     /* Get vout */
     if ((info->caps & ONLP_PSU_CAPS_IOUT) && (info->caps & ONLP_PSU_CAPS_POUT) && info->miout != 0) {
-            info->mvout = info->mpout / info->miout * 1000;
-            info->caps |= ONLP_PSU_CAPS_VOUT;
+        info->mvout = info->mpout / info->miout * 1000;
+        info->caps |= ONLP_PSU_CAPS_VOUT;
     }
 
-    /* Get model name */
-    ret = snprintf(path, sizeof(path), PSU_PFE1100_PATH_FMT, psu_pfedrv_i2c_devaddr[pid-1], PSU_PFE1100_MODEL);
-    if( ret >= sizeof(path) ){
-        AIM_LOG_ERROR("path size overwrite (%d,%d)\r\n", ret, sizeof(path));
-        return ONLP_STATUS_E_INTERNAL;
-    }
-    bmc_file_read_str(path, info->model, sizeof(info->model));
-
-    /* Get serial number */
-    ret = snprintf(path, sizeof(path), PSU_PFE1100_PATH_FMT, psu_pfedrv_i2c_devaddr[pid-1], PSU_PFE1100_SERIAL);
-    if( ret >= sizeof(path) ){
-        AIM_LOG_ERROR("path size overwrite (%d,%d)\r\n", ret, sizeof(path));
-        return ONLP_STATUS_E_INTERNAL;
-    }
-    bmc_file_read_str(path, info->serial, sizeof(info->serial));
     return ONLP_STATUS_OK;
 }
 

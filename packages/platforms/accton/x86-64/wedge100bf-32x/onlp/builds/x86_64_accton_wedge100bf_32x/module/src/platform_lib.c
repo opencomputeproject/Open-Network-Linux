@@ -31,9 +31,9 @@
 
 #define TTY_DEVICE                      "/dev/ttyACM0"
 #define TTY_PROMPT                      "@bmc:"
-#define TTY_I2C_TIMEOUT                 55000
-#define TTY_BMC_LOGIN_TIMEOUT            1000000
-#define TTY_RETRY                       10
+#define TTY_I2C_TIMEOUT                 80000
+#define TTY_BMC_LOGIN_TIMEOUT           1000000
+#define TTY_RETRY                       20
 #define MAXIMUM_TTY_BUFFER_LENGTH       1024
 #define MAXIMUM_TTY_STRING_LENGTH       (MAXIMUM_TTY_BUFFER_LENGTH - 1)
 
@@ -89,6 +89,16 @@ static int tty_exec_buf(unsigned long udelay, const char *str)
     memset(tty_buf, 0, MAXIMUM_TTY_BUFFER_LENGTH);
     read(tty_fd, tty_buf, MAXIMUM_TTY_BUFFER_LENGTH);
     return (strstr(tty_buf, str) != NULL) ? 0 : -1;
+}
+
+/* Clear Rx buffer by reading it out */
+static int tty_clear_rxbuf(void) {
+    if (tty_fd < 0)
+        return ONLP_STATUS_E_GENERIC;
+
+    read(tty_fd, tty_buf, MAXIMUM_TTY_BUFFER_LENGTH);
+    memset(tty_buf, 0, MAXIMUM_TTY_BUFFER_LENGTH);
+    return ONLP_STATUS_OK;
 }
 
 static int tty_login(void)
@@ -275,31 +285,44 @@ int
 bmc_command_read_int(int* value, char *cmd, int base)
 {
     int len;
-    int i;
+    int i, j, ret;
     char *prev_str = NULL;
     char *current_str= NULL;
-    if (bmc_send_command(cmd) < 0) {
-        return ONLP_STATUS_E_INTERNAL;
-    }
-    len = (int)strlen(cmd);
-    prev_str = strstr(tty_buf, cmd);
-    if (prev_str == NULL) {
-        return -1;
-    }
-    for (i = 1; i <= TTY_RETRY; i++) {
-        current_str = strstr(prev_str + len, cmd);
-        if(current_str == NULL) {
-            if( !chk_numeric_char(prev_str + len, base) ){
-                return -1;
-            }
-            *value = strtoul(prev_str + len, NULL, base);
-            break;
-        }else {
-            prev_str = current_str;
+
+    ret = -1;
+    for (j = 1; j <= TTY_RETRY; j++) {
+        tty_clear_rxbuf();
+        if (bmc_send_command(cmd) < 0) {
+            return ONLP_STATUS_E_INTERNAL;
+        }
+
+        len = (int)strlen(cmd);
+        prev_str = strstr(tty_buf, cmd);
+        if (prev_str == NULL) {
+            ret = -1;
             continue;
         }
+
+        for (i = 1; i <= TTY_RETRY; i++) {
+            current_str = strstr(prev_str + len, cmd);
+            if(current_str == NULL) {
+                if( !chk_numeric_char(prev_str + len, base) ) {
+                    ret = -1;
+                    continue;
+                }
+                *value = strtoul(prev_str + len, NULL, base);
+                ret = 0;
+                goto exit;
+            } else {
+                prev_str = current_str;
+                ret = -1;
+                continue;
+            }
+        }
     }
-    return 0;
+
+exit:
+    return ret;
 }
 
 
@@ -312,12 +335,16 @@ bmc_file_read_int(int* value, char *file, int base)
 }
 
 int
-bmc_i2c_readb(uint8_t bus, uint8_t devaddr, uint8_t addr)
+bmc_i2c_readb(uint8_t bus, uint8_t devaddr, int16_t addr)
 {
     int ret = 0, value;
     char cmd[64] = {0};
-
-    snprintf(cmd, sizeof(cmd), "i2cget -f -y %d 0x%x 0x%02x\r\n", bus, devaddr, addr);
+    if (addr < 0) {
+        snprintf(cmd, sizeof(cmd), "i2cget -f -y %d 0x%x\r\n", bus, devaddr);
+    } else {
+        snprintf(cmd, sizeof(cmd), "i2cget -f -y %d 0x%x 0x%02x\r\n", bus,
+                 devaddr, (uint8_t)addr);
+    }
     ret = bmc_command_read_int(&value, cmd, 16);
     return (ret < 0) ? ret : value;
 }

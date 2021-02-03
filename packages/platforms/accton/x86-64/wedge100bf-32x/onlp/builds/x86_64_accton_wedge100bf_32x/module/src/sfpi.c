@@ -50,7 +50,7 @@ int
 onlp_sfpi_init(void)
 {
     /* Called at initialization time */    
-    return ONLP_STATUS_OK;
+    return bmc_tty_init();
 }
 
 int

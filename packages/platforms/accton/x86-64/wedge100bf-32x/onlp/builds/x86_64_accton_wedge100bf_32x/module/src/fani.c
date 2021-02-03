@@ -73,7 +73,7 @@ onlp_fan_info_t finfo[] = {
 int
 onlp_fani_init(void)
 {
-    return ONLP_STATUS_OK;
+    return bmc_tty_init();
 }
 
 int

@@ -105,7 +105,7 @@ static onlp_led_info_t linfo[] =
 int
 onlp_ledi_init(void)
 {
-    return ONLP_STATUS_OK;
+    return bmc_tty_init();
 }
 
 static int
