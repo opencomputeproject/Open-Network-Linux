@@ -25,8 +25,7 @@ x86-64-accton-as4630-54pe-r0:
       console=ttyS0,115200n8
       intel_iommu=off
 
-  ##network:
-  ##  interfaces:
-  ##    ma1:
-  ##      name: ~
-  ##      syspath: pci0000:00/0000:00:1c.0/0000:0a:00.0
+  network:
+    interfaces:
+      ma1:
+        name: eth2
