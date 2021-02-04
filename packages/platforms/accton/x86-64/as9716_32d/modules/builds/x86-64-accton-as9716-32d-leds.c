@@ -299,41 +299,18 @@ static enum led_brightness accton_as9716_32d_led_loc_get(struct led_classdev *cd
     return led_reg_val_to_light_mode(LED_TYPE_LOC, ledctl->reg_val[1]);
 }
 
-static void accton_as9716_32d_led_fan_set(struct led_classdev *led_cdev,
-        enum led_brightness led_light_mode)
+static void as9716_32d_led_auto_set(struct led_classdev *led_cdev,
+                                           enum led_brightness led_light_mode)
 {
-    accton_as9716_32d_led_set(led_cdev, led_light_mode, LED_TYPE_FAN);
 }
 
-static enum led_brightness accton_as9716_32d_led_fan_get(struct led_classdev *cdev)
+static enum led_brightness as9716_32d_led_auto_get(struct led_classdev *cdev)
 {
-    accton_as9716_32d_led_update();
-    return led_reg_val_to_light_mode(LED_TYPE_FAN, ledctl->reg_val[1]);
+    return LED_MODE_AUTO;
 }
 
-static void accton_as9716_32d_led_psu1_set(struct led_classdev *led_cdev,
-        enum led_brightness led_light_mode)
-{
-    accton_as9716_32d_led_set(led_cdev, led_light_mode, LED_TYPE_PSU1);
-}
 
-static enum led_brightness accton_as9716_32d_led_psu1_get(struct led_classdev *cdev)
-{
-    accton_as9716_32d_led_update();
-    return led_reg_val_to_light_mode(LED_TYPE_PSU1, ledctl->reg_val[1]);
-}
 
-static void accton_as9716_32d_led_psu2_set(struct led_classdev *led_cdev,
-        enum led_brightness led_light_mode)
-{
-    accton_as9716_32d_led_set(led_cdev, led_light_mode, LED_TYPE_PSU2);
-}
-
-static enum led_brightness accton_as9716_32d_led_psu2_get(struct led_classdev *cdev)
-{
-    accton_as9716_32d_led_update();
-    return led_reg_val_to_light_mode(LED_TYPE_PSU2, ledctl->reg_val[1]);
-}
 
 static struct led_classdev accton_as9716_32d_leds[] = {
     [LED_TYPE_DIAG] = {
@@ -355,26 +332,26 @@ static struct led_classdev accton_as9716_32d_leds[] = {
     [LED_TYPE_FAN] = {
         .name			 = "accton_as9716_32d_led::fan",
         .default_trigger = "unused",
-        .brightness_set	 = accton_as9716_32d_led_fan_set,
-        .brightness_get  = accton_as9716_32d_led_fan_get,
+        .brightness_set	 = as9716_32d_led_auto_set,
+        .brightness_get  = as9716_32d_led_auto_get,
         .flags			 = LED_CORE_SUSPENDRESUME,
-        .max_brightness  = LED_MODE_AMBER,
+        .max_brightness  = LED_MODE_AUTO,
     },
     [LED_TYPE_PSU1] = {
         .name			 = "accton_as9716_32d_led::psu1",
         .default_trigger = "unused",
-        .brightness_set	 = accton_as9716_32d_led_psu1_set,
-        .brightness_get  = accton_as9716_32d_led_psu1_get,
+        .brightness_set	 = as9716_32d_led_auto_set,
+        .brightness_get  = as9716_32d_led_auto_get,
         .flags			 = LED_CORE_SUSPENDRESUME,
-        .max_brightness  = LED_MODE_AMBER,
+        .max_brightness  = LED_MODE_AUTO,
     },
     [LED_TYPE_PSU2] = {
         .name			 = "accton_as9716_32d_led::psu2",
         .default_trigger = "unused",
-        .brightness_set	 = accton_as9716_32d_led_psu2_set,
-        .brightness_get  = accton_as9716_32d_led_psu2_get,
+        .brightness_set	 = as9716_32d_led_auto_set,
+        .brightness_get  = as9716_32d_led_auto_get,
         .flags			 = LED_CORE_SUSPENDRESUME,
-        .max_brightness  = LED_MODE_AMBER,
+        .max_brightness  = LED_MODE_AUTO,
     },
 };
 
