@@ -2,7 +2,7 @@ from onl.platform.base import *
 from onl.platform.accton import *
 
 class OnlPlatform_x86_64_accton_as4630_54pe_r0(OnlPlatformAccton,
-                                              OnlPlatformPortConfig_48x25_6x100):
+                                              OnlPlatformPortConfig_48x1_4x25_2x100):
 
     PLATFORM='x86-64-accton-as4630-54pe-r0'
     MODEL="AS4630-54PE"
