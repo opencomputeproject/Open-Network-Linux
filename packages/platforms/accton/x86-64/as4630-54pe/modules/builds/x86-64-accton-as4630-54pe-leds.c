@@ -362,40 +362,14 @@ static enum led_brightness accton_as4630_54pe_led_stk2_get(struct led_classdev *
     return led_reg_val_to_light_mode(LED_TYPE_STK2, ledctl->reg_val[1]);
 }
 
-static void accton_as4630_54pe_led_fan_set(struct led_classdev *led_cdev,
-        enum led_brightness led_light_mode)
+static void as4630_54pe_led_auto_set(struct led_classdev *led_cdev,
+                                           enum led_brightness led_light_mode)
 {
-    accton_as4630_54pe_led_set(led_cdev, led_light_mode, LED_TYPE_FAN);
 }
 
-static enum led_brightness accton_as4630_54pe_led_fan_get(struct led_classdev *cdev)
+static enum led_brightness as4630_54pe_led_auto_get(struct led_classdev *cdev)
 {
-    accton_as4630_54pe_led_update();
-    return led_reg_val_to_light_mode(LED_TYPE_FAN, ledctl->reg_val[0]);
-}
-
-static void accton_as4630_54pe_led_psu1_set(struct led_classdev *led_cdev,
-        enum led_brightness led_light_mode)
-{
-    accton_as4630_54pe_led_set(led_cdev, led_light_mode, LED_TYPE_PSU1);
-}
-
-static enum led_brightness accton_as4630_54pe_led_psu1_get(struct led_classdev *cdev)
-{
-    accton_as4630_54pe_led_update();
-    return led_reg_val_to_light_mode(LED_TYPE_PSU1, ledctl->reg_val[0]);
-}
-
-static void accton_as4630_54pe_led_psu2_set(struct led_classdev *led_cdev,
-        enum led_brightness led_light_mode)
-{
-    accton_as4630_54pe_led_set(led_cdev, led_light_mode, LED_TYPE_PSU2);
-}
-
-static enum led_brightness accton_as4630_54pe_led_psu2_get(struct led_classdev *cdev)
-{
-    accton_as4630_54pe_led_update();
-    return led_reg_val_to_light_mode(LED_TYPE_PSU2, ledctl->reg_val[0]);
+    return LED_MODE_AUTO;
 }
 
 static struct led_classdev accton_as4630_54pe_leds[] = {
@@ -442,24 +416,24 @@ static struct led_classdev accton_as4630_54pe_leds[] = {
     [LED_TYPE_FAN] = {
         .name			 = "fan",
         .default_trigger = "unused",
-        .brightness_set	 = accton_as4630_54pe_led_fan_set,
-        .brightness_get  = accton_as4630_54pe_led_fan_get,
+        .brightness_set	 = as4630_54pe_led_auto_set,
+        .brightness_get  = as4630_54pe_led_auto_get,
         .flags			 = LED_CORE_SUSPENDRESUME,
         .max_brightness  = LED_MODE_AUTO,
     },
     [LED_TYPE_PSU1] = {
         .name			 = "psu1",
         .default_trigger = "unused",
-        .brightness_set	 = accton_as4630_54pe_led_psu1_set,
-        .brightness_get  = accton_as4630_54pe_led_psu1_get,
+        .brightness_set	 = as4630_54pe_led_auto_set,
+        .brightness_get  = as4630_54pe_led_auto_get,
         .flags			 = LED_CORE_SUSPENDRESUME,
         .max_brightness  = LED_MODE_AUTO,
     },
     [LED_TYPE_PSU2] = {
         .name			 = "psu2",
         .default_trigger = "unused",
-        .brightness_set	 = accton_as4630_54pe_led_psu2_set,
-        .brightness_get  = accton_as4630_54pe_led_psu2_get,
+        .brightness_set	 = as4630_54pe_led_auto_set,
+        .brightness_get  = as4630_54pe_led_auto_get,
         .flags			 = LED_CORE_SUSPENDRESUME,
         .max_brightness  = LED_MODE_AUTO,
     },
