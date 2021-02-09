@@ -1,0 +1,48 @@
+From 6a826ae7e734054d610f0d3a9daad88339ee35e7 Mon Sep 17 00:00:00 2001
+From: Oleksandr Shamray <oleksandrs@nvidia.com>
+Date: Wed, 21 Oct 2020 15:10:48 +0300
+Subject: [PATCH 2/2] platform/x86: mlx-platform: Remove PSU EEPROM
+ configuration
+
+Remove PSU EEPROM configuration for systems class equipped with
+Mellanox chip Spectrum and Mellanox Broadwell Comex. Till now all the systems from this class
+used few types of power units, all equipped with EEPROM device with
+address space two bytes. Thus, all these devices have been handled by
+EEPROM driver "24c02".
+There is a new requirement is to support power unit replacement by "off
+the shelf" device, matching electrical required parameters. Such device
+could be equpped with different EEPROM type, which could be one byte
+address space adressing or even could be not equipped with EEPROM.
+In such case "24c02" will not work.
+
+Fixes: ef08e14a3 ("platform/x86: mlx-platform: Add support for new msn274x system type")
+Signed-ff-by: Oleksandr Shamray <oleksandrs@nvidia.com>
+---
+ drivers/platform/x86/mlx-platform.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/platform/x86/mlx-platform.c b/drivers/platform/x86/mlx-platform.c
+index 6400f1d..c1d1a78 100644
+--- a/drivers/platform/x86/mlx-platform.c
++++ b/drivers/platform/x86/mlx-platform.c
+@@ -593,15 +593,13 @@ static struct mlxreg_core_data mlxplat_mlxcpld_msn274x_psu_items_data[] = {
+ 		.label = "psu1",
+ 		.reg = MLXPLAT_CPLD_LPC_REG_PSU_OFFSET,
+ 		.mask = BIT(0),
+-		.hpdev.brdinfo = &mlxplat_mlxcpld_psu[0],
+-		.hpdev.nr = MLXPLAT_CPLD_PSU_MSNXXXX_NR,
++		.hpdev.nr = MLXPLAT_CPLD_NR_NONE,
+ 	},
+ 	{
+ 		.label = "psu2",
+ 		.reg = MLXPLAT_CPLD_LPC_REG_PSU_OFFSET,
+ 		.mask = BIT(1),
+-		.hpdev.brdinfo = &mlxplat_mlxcpld_psu[1],
+-		.hpdev.nr = MLXPLAT_CPLD_PSU_MSNXXXX_NR,
++		.hpdev.nr = MLXPLAT_CPLD_NR_NONE,
+ 	},
+ };
+ 
+-- 
+2.8.4
+

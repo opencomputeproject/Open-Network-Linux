@@ -186,6 +186,8 @@ int onlp_fani_get_min_rpm(int id);
 
 int psu_fan_read_eeprom(int psu_index, onlp_fan_info_t* fan_info);
 
+int psu_fan_read_eeprom_vpd(int psu_index, onlp_fan_info_t* fan_info);
+
 int psu_read_eeprom(int psu_index, onlp_psu_info_t* psu_info);
 
 mlnx_platform_info_t* get_platform_info();

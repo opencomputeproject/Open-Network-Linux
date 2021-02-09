@@ -1,0 +1,53 @@
+From f7ef8e5a37f7ae501bce1ae0a5592c4918829e93 Mon Sep 17 00:00:00 2001
+From: Oleksandr Shamray <oleksandrs@nvidia.com>
+Date: Mon, 19 Oct 2020 15:30:08 +0300
+Subject: [PATCH] mlxsw: core: Fix memory leak on module removal
+
+Free the devlink instance during the teardown sequence in the non-reload case to avoid the following memory leak.
+
+unreferenced object 0xffff888232895000 (size 2048):
+  comm "modprobe", pid 1073, jiffies 4295568857 (age 164.871s)
+  hex dump (first 32 bytes):
+    00 01 00 00 00 00 ad de 22 01 00 00 00 00 ad de  ........".......
+    10 50 89 32 82 88 ff ff 10 50 89 32 82 88 ff ff  .P.2.....P.2....
+  backtrace:
+    [<00000000c704e9a6>] __kmalloc+0x13a/0x2a0
+    [<00000000ee30129d>] devlink_alloc+0xff/0x760
+    [<0000000092ab3e5d>] 0xffffffffa042e5b0
+    [<000000004f3f8a31>] 0xffffffffa042f6ad
+    [<0000000092800b4b>] 0xffffffffa0491df3
+    [<00000000c4843903>] local_pci_probe+0xcb/0x170
+    [<000000006993ded7>] pci_device_probe+0x2c2/0x4e0
+    [<00000000a8e0de75>] really_probe+0x2c5/0xf90
+    [<00000000d42ba75d>] driver_probe_device+0x1eb/0x340
+    [<00000000bcc95e05>] device_driver_attach+0x294/0x300
+    [<000000000e2bc177>] __driver_attach+0x167/0x2f0
+    [<000000007d44cd6e>] bus_for_each_dev+0x148/0x1f0
+    [<000000003cd5a91e>] driver_attach+0x45/0x60
+    [<000000000041ce51>] bus_add_driver+0x3b8/0x720
+    [<00000000f5215476>] driver_register+0x230/0x4e0
+    [<00000000d79356f5>] __pci_register_driver+0x190/0x200
+
+Fixes: a22712a96291 ("mlxsw: core: Fix devlink unregister flow")
+Signed-off-by: Ido Schimmel <idosch@nvidia.com>
+Reported-by: Vadim Pasternak <vadimp@nvidia.com>
+---
+ drivers/net/ethernet/mellanox/mlxsw/core.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/net/ethernet/mellanox/mlxsw/core.c b/drivers/net/ethernet/mellanox/mlxsw/core.c
+index b67d610..e2faedc 100644
+--- a/drivers/net/ethernet/mellanox/mlxsw/core.c
++++ b/drivers/net/ethernet/mellanox/mlxsw/core.c
+@@ -1135,6 +1135,8 @@ void mlxsw_core_bus_device_unregister(struct mlxsw_core *mlxsw_core,
+ 	if (!reload)
+ 		devlink_resources_unregister(devlink, NULL);
+ 	mlxsw_core->bus->fini(mlxsw_core->bus_priv);
++	if (!reload)
++		devlink_free(devlink);
+ 
+ 	return;
+ 
+-- 
+2.8.4
+

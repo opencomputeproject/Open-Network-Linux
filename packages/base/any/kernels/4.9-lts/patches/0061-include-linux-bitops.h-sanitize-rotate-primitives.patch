@@ -1,0 +1,131 @@
+From 17bbb04ee68324aef20142647fb2c3affa802b84 Mon Sep 17 00:00:00 2001
+From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Date: Tue, 14 May 2019 15:43:27 -0700
+Subject: [PATCH] include/linux/bitops.h: sanitize rotate primitives
+
+The ror32 implementation (word >> shift) | (word << (32 - shift) has
+undefined behaviour if shift is outside the [1, 31] range.  Similarly
+for the 64 bit variants.  Most callers pass a compile-time constant
+(naturally in that range), but there's an UBSAN report that these may
+actually be called with a shift count of 0.
+
+Instead of special-casing that, we can make them DTRT for all values of
+shift while also avoiding UB.  For some reason, this was already partly
+done for rol32 (which was well-defined for [0, 31]).  gcc 8 recognizes
+these patterns as rotates, so for example
+
+  __u32 rol32(__u32 word, unsigned int shift)
+  {
+	return (word << (shift & 31)) | (word >> ((-shift) & 31));
+  }
+
+compiles to
+
+0000000000000020 <rol32>:
+  20:   89 f8                   mov    %edi,%eax
+  22:   89 f1                   mov    %esi,%ecx
+  24:   d3 c0                   rol    %cl,%eax
+  26:   c3                      retq
+
+Older compilers unfortunately do not do as well, but this only affects
+the small minority of users that don't pass constants.
+
+Due to integer promotions, ro[lr]8 were already well-defined for shifts
+in [0, 8], and ro[lr]16 were mostly well-defined for shifts in [0, 16]
+(only mostly - u16 gets promoted to _signed_ int, so if bit 15 is set,
+word << 16 is undefined).  For consistency, update those as well.
+
+Link: http://lkml.kernel.org/r/20190410211906.2190-1-linux@rasmusvillemoes.dk
+Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Reported-by: Ido Schimmel <idosch@mellanox.com>
+Tested-by: Ido Schimmel <idosch@mellanox.com>
+Reviewed-by: Will Deacon <will.deacon@arm.com>
+Cc: Vadim Pasternak <vadimp@mellanox.com>
+Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>
+Cc: Jacek Anaszewski <jacek.anaszewski@gmail.com>
+Cc: Pavel Machek <pavel@ucw.cz>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
+---
+ include/linux/bitops.h | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/include/linux/bitops.h b/include/linux/bitops.h
+index a83c822..4b61c71 100644
+--- a/include/linux/bitops.h
++++ b/include/linux/bitops.h
+@@ -77,7 +77,7 @@ static __always_inline unsigned long hweight_long(unsigned long w)
+  */
+ static inline __u64 rol64(__u64 word, unsigned int shift)
+ {
+-	return (word << shift) | (word >> (64 - shift));
++	return (word << (shift & 63)) | (word >> ((-shift) & 63));
+ }
+ 
+ /**
+@@ -87,7 +87,7 @@ static inline __u64 rol64(__u64 word, unsigned int shift)
+  */
+ static inline __u64 ror64(__u64 word, unsigned int shift)
+ {
+-	return (word >> shift) | (word << (64 - shift));
++	return (word >> (shift & 63)) | (word << ((-shift) & 63));
+ }
+ 
+ /**
+@@ -97,7 +97,7 @@ static inline __u64 ror64(__u64 word, unsigned int shift)
+  */
+ static inline __u32 rol32(__u32 word, unsigned int shift)
+ {
+-	return (word << shift) | (word >> ((-shift) & 31));
++	return (word << (shift & 31)) | (word >> ((-shift) & 31));
+ }
+ 
+ /**
+@@ -107,7 +107,7 @@ static inline __u32 rol32(__u32 word, unsigned int shift)
+  */
+ static inline __u32 ror32(__u32 word, unsigned int shift)
+ {
+-	return (word >> shift) | (word << (32 - shift));
++	return (word >> (shift & 31)) | (word << ((-shift) & 31));
+ }
+ 
+ /**
+@@ -117,7 +117,7 @@ static inline __u32 ror32(__u32 word, unsigned int shift)
+  */
+ static inline __u16 rol16(__u16 word, unsigned int shift)
+ {
+-	return (word << shift) | (word >> (16 - shift));
++	return (word << (shift & 15)) | (word >> ((-shift) & 15));
+ }
+ 
+ /**
+@@ -127,7 +127,7 @@ static inline __u16 rol16(__u16 word, unsigned int shift)
+  */
+ static inline __u16 ror16(__u16 word, unsigned int shift)
+ {
+-	return (word >> shift) | (word << (16 - shift));
++	return (word >> (shift & 15)) | (word << ((-shift) & 15));
+ }
+ 
+ /**
+@@ -137,7 +137,7 @@ static inline __u16 ror16(__u16 word, unsigned int shift)
+  */
+ static inline __u8 rol8(__u8 word, unsigned int shift)
+ {
+-	return (word << shift) | (word >> (8 - shift));
++	return (word << (shift & 7)) | (word >> ((-shift) & 7));
+ }
+ 
+ /**
+@@ -147,7 +147,7 @@ static inline __u8 rol8(__u8 word, unsigned int shift)
+  */
+ static inline __u8 ror8(__u8 word, unsigned int shift)
+ {
+-	return (word >> shift) | (word << (8 - shift));
++	return (word >> (shift & 7)) | (word << ((-shift) & 7));
+ }
+ 
+ /**
+-- 
+2.8.4
+

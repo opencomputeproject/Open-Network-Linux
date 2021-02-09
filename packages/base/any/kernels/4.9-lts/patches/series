@@ -60,3 +60,9 @@ driver-add-the-support-max6620.patch
 0057-watchdog-mlx-wdt-support-new-watchdog-type-with-long.patch
 0058-mlxsw-core-thermal-Enable-thermal-zones-by-default.patch
 0059-platform-x86-mlx-platform-Remove-PSU-EEPROM-configur.patch
+0060-thermal-Fix-deadlock-in-thermal-thermal_zone_device_.patch
+0061-include-linux-bitops.h-sanitize-rotate-primitives.patch
+0062-mlxsw-core-Fix-memory-leak-on-module-removal.patch
+0063-platform-x86-mlx-platform-Remove-PSU-EEPROM-configur.patch
+0064-platform-x86-mlx-platform-Remove-PSU-EEPROM-configur.patch
+

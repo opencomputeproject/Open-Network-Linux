@@ -28,3 +28,8 @@ driver-hwmon-max6620.patch
 0025-watchdog-mlx-wdt-support-new-watchdog-type-with-long.patch
 0026-mlxsw-core-thermal-Enable-thermal-zones-by-default.patch
 0027-platform-x86-mlx-platform-Remove-PSU-EEPROM-configur.patch
+0028-thermal-Fix-deadlock-in-thermal-thermal_zone_device_.patch
+0029-mlxsw-core-Fix-memory-leak-on-module-removal.patch
+0030-platform-x86-mlx-platform-Remove-PSU-EEPROM-configur.patch
+0031-platform-x86-mlx-platform-Remove-PSU-EEPROM-configur.patch
+

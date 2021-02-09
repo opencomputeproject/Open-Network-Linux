@@ -37,6 +37,9 @@
 #include "mlnx_common_log.h"
 #include "mlnx_common_int.h"
 
+#define MAX_PSU_VPD_LENGTH 256
+#define MAX_VPD_FIELD_MAX_LENGTH 64
+
 int
 psu_fan_read_eeprom(int psu_index, onlp_fan_info_t* fan_info)
 {
@@ -79,8 +82,48 @@ psu_fan_read_eeprom(int psu_index, onlp_fan_info_t* fan_info)
     return ONLP_STATUS_OK;
 }
 
-#define MAX_PSU_VPD_LENGTH 256
-#define MAX_VPD_FIELD_MAX_LENGTH 64
+int
+psu_fan_read_eeprom_vpd(int psu_index, onlp_fan_info_t* fan_info)
+{
+	char file_data[MAX_PSU_VPD_LENGTH] = {0};
+	char data[MAX_VPD_FIELD_MAX_LENGTH] = {0};
+	char* vpd_field_str = NULL;
+	int rv = 0, len=0;
+
+	rv = onlp_file_read((uint8_t* )file_data, sizeof(file_data)-1, &len,
+				PSU_VPD_PATH, "psu", psu_index);
+	if (rv < 0) {
+		return ONLP_STATUS_E_INTERNAL;
+	}
+
+	/* Serial number */
+	vpd_field_str = strstr(file_data,"SN_VPD_FIELD");
+	if(!vpd_field_str) {
+		return ONLP_STATUS_E_INTERNAL;
+	}
+	rv = sscanf(vpd_field_str,"SN_VPD_FIELD: %s", data);
+	if (rv != 1) {
+		return ONLP_STATUS_E_INTERNAL;
+	}
+	if (fan_info) {
+		aim_strlcpy(fan_info->serial, data, sizeof(fan_info->serial));
+	}
+	memset(data, 0, MAX_VPD_FIELD_MAX_LENGTH);
+
+	/* Part number */
+	vpd_field_str = strstr(file_data,"PN_VPD_FIELD");
+	if(!vpd_field_str) {
+		return ONLP_STATUS_E_INTERNAL;
+	}
+	rv = sscanf(vpd_field_str,"PN_VPD_FIELD: %s",  data);
+	if (rv != 1) {
+		return ONLP_STATUS_E_INTERNAL;
+	}
+	if (fan_info) {
+		aim_strlcpy(fan_info->model, data, sizeof(fan_info->model));
+	}
+	return ONLP_STATUS_OK;
+}
 
 int
 psu_read_eeprom(int psu_index, onlp_psu_info_t* psu_info)

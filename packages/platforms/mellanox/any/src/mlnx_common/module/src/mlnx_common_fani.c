@@ -202,7 +202,7 @@ _onlp_fani_info_get_fan(int local_id, onlp_fan_info_t* info)
 }
 
 
-static int
+ static int
 _onlp_fani_info_get_fan_on_psu(int local_id, int psu_id, onlp_fan_info_t* info)
 {
     int   r_val, ret;
@@ -245,7 +245,7 @@ _onlp_fani_info_get_fan_on_psu(int local_id, int psu_id, onlp_fan_info_t* info)
     }
     info->percentage = (int)temp;
 
-    if (0 != psu_fan_read_eeprom((local_id-mlnx_platform_info->first_psu_fan_id)+1, info))
+    if (0 != psu_fan_read_eeprom_vpd((local_id-mlnx_platform_info->first_psu_fan_id)+1, info))
         return ONLP_STATUS_E_INTERNAL;
 
     return ONLP_STATUS_OK;

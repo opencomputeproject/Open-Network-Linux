@@ -1,0 +1,49 @@
+From 198e605329d5202aec72bf89c291eb7da360dd33 Mon Sep 17 00:00:00 2001
+From: Oleksandr Shamray <oleksandrs@nvidia.com>
+Date: Wed, 21 Oct 2020 13:57:35 +0300
+Subject: [PATCH 1/2] platform/x86: mlx-platform: Remove PSU EEPROM
+ configuration
+
+Remove PSU EEPROM configuration for systems class equipped with
+Mellanox chip Spectrum and Celeron CPU. Till now all the systems from this class
+used few types of power units, all equipped with EEPROM device with
+address space two bytes. Thus, all these devices have been handled by
+EEPROM driver "24c02".
+There is a new requirement is to support power unit replacement by "off
+the shelf" device, matching electrical required parameters. Such device
+could be equpped with different EEPROM type, which could be one byte
+address space adressing or even could be not equipped with EEPROM.
+In such case "24c02" will not work.
+
+Fixes: c6acad68e ("platform/mellanox: mlxreg-hotplug: Modify to use a regmap interface")
+Fixes: ba814fdd0 ("platform/x86: mlx-platform: Use defines for bus assignment")
+Signed-off-by: Oleksandr Shamray <oleksandrs@nvidia.com>
+---
+ drivers/platform/x86/mlx-platform.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/platform/x86/mlx-platform.c b/drivers/platform/x86/mlx-platform.c
+index d6c87fb..6400f1d 100644
+--- a/drivers/platform/x86/mlx-platform.c
++++ b/drivers/platform/x86/mlx-platform.c
+@@ -375,15 +375,13 @@ static struct mlxreg_core_data mlxplat_mlxcpld_default_psu_items_data[] = {
+ 		.label = "psu1",
+ 		.reg = MLXPLAT_CPLD_LPC_REG_PSU_OFFSET,
+ 		.mask = BIT(0),
+-		.hpdev.brdinfo = &mlxplat_mlxcpld_psu[0],
+-		.hpdev.nr = MLXPLAT_CPLD_PSU_DEFAULT_NR,
++		.hpdev.nr = MLXPLAT_CPLD_NR_NONE,
+ 	},
+ 	{
+ 		.label = "psu2",
+ 		.reg = MLXPLAT_CPLD_LPC_REG_PSU_OFFSET,
+ 		.mask = BIT(1),
+-		.hpdev.brdinfo = &mlxplat_mlxcpld_psu[1],
+-		.hpdev.nr = MLXPLAT_CPLD_PSU_DEFAULT_NR,
++		.hpdev.nr = MLXPLAT_CPLD_NR_NONE,
+ 	},
+ };
+ 
+-- 
+2.8.4
+

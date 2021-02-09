@@ -48,16 +48,9 @@ int mc_get_platform_info(mlnx_platform_info_t* mlnx_platform)
 		aim_strlcpy(mlnx_platform->onl_platform_name, __ONL_PLATFORM_NAME, PLATFORM_NAME_MAX_LEN);
 	}
 
-	if (!strcmp(mlnx_platform->onl_platform_name, "x86-64-mlnx_msn4700c-r0")) {
-		mlnx_platform->led_num = CHASSIS_C_LED_COUNT;
-		mlnx_platform->fan_num = CHASSIS_C_FAN_COUNT;
-		mlnx_platform->thermal_num = CHASSIS_C_THERMAL_COUNT;
-	} else {
-		mlnx_platform->led_num = CHASSIS_LED_COUNT;
-		mlnx_platform->fan_num = CHASSIS_FAN_COUNT;
-		mlnx_platform->thermal_num = CHASSIS_THERMAL_COUNT;
-	}
-
+	mlnx_platform->led_num = CHASSIS_LED_COUNT;
+	mlnx_platform->fan_num = CHASSIS_FAN_COUNT;
+	mlnx_platform->thermal_num = CHASSIS_THERMAL_COUNT;
 	mlnx_platform->sfp_num = SFP_PORT_COUNT;
 	mlnx_platform->psu_num = CHASSIS_PSU_COUNT;
 	mlnx_platform->cpld_num = CPLD_COUNT;
@@ -79,8 +72,8 @@ onlp_sysi_platform_set(const char* platform)
         mlnx_platform = get_platform_info();
         mc_get_platform_info(mlnx_platform);
         return ONLP_STATUS_OK;
-    } else if(!strcmp(platform, "x86-64-mlnx-msn4700c-r0")) {
-        __ONL_PLATFORM_NAME = "x86-64-mlnx_msn4700c-r0";
+    } else if(!strcmp(platform, "x86-64-mlnx-msn4410-r0")) {
+        __ONL_PLATFORM_NAME = "x86-64-mlnx_msn4410-r0";
         mlnx_platform = get_platform_info();
         mc_get_platform_info(mlnx_platform);
         return ONLP_STATUS_OK;

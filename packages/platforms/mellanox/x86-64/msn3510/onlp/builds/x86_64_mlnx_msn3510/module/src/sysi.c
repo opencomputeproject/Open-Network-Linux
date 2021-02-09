@@ -37,7 +37,7 @@
 #include "x86_64_mlnx_msn3510_int.h"
 #include "x86_64_mlnx_msn3510_log.h"
 
-#define ONL_PLATFORM_NAME  "x86-64-mlnx-msn2010-r0"
+#define ONL_PLATFORM_NAME  "x86-64-mlnx-msn3510-r0"
 
 int mc_get_platform_info(mlnx_platform_info_t* mlnx_platform)
 {
@@ -48,10 +48,10 @@ int mc_get_platform_info(mlnx_platform_info_t* mlnx_platform)
 	mlnx_platform->fan_num = CHASSIS_FAN_COUNT;
 	mlnx_platform->thermal_num = CHASSIS_THERMAL_COUNT;
 	mlnx_platform->cpld_num = CPLD_COUNT;
-	mlnx_platform->psu_fixed = true;
-	mlnx_platform->fan_fixed = true;
-	mlnx_platform->psu_type = PSU_TYPE_1;
-	mlnx_platform->led_type = LED_TYPE_1;
+	mlnx_platform->psu_fixed = false;
+	mlnx_platform->fan_fixed = false;
+	mlnx_platform->psu_type = PSU_TYPE_3;
+	mlnx_platform->led_type = LED_TYPE_3;
 
 	return ONLP_STATUS_OK;
 }

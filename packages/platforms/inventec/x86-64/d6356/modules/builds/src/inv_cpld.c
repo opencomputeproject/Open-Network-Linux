@@ -475,7 +475,7 @@ static ssize_t show_sysled(struct device *dev, struct device_attribute *da,
 	struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct i2c_client *client = to_i2c_client(dev);
 	struct cpld_data *data = i2c_get_clientdata(client);
-	u8 byte;
+	u8 byte = 0;
 	int shift = (attr->index == 0)?3:0;
     
 	mutex_lock(&data->update_lock);
@@ -497,7 +497,7 @@ static ssize_t set_sysled(struct device *dev,
 	struct cpld_data *data = i2c_get_clientdata(client);
 
 	u8 temp = simple_strtol(buf, NULL, 16);
-	u8 byte;
+	u8 byte = 0;
 	int shift = (attr->index == 0)?3:0;
     
 	temp &= 0x7;    
