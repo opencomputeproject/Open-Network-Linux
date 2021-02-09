@@ -18,6 +18,7 @@
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/fs.h>
+#include <linux/version.h>
 #include <asm/uaccess.h>
 #define SWITCH_TEMPERATURE_SOCK     "/proc/switch/temp"
 #define PSOC_POLLING_PERIOD 1000
@@ -292,24 +293,26 @@ static ssize_t psoc_ipmi_write(char *buf, unsigned offset, size_t count)
 
 static u16 psoc_read16(u8 offset)
 {
-	u16 value = 0;
-	u8 buf[]={0,0};
+    u16 value = 0;
+    u8 buf[]={0,0};
     
-    if(psoc_ipmi_read(buf, offset, 2) == 2)
+    if(psoc_ipmi_read(buf, offset, 2) == 2){
         value = (buf[0]<<8 | buf[1]<<0);
+    }
     
 	return value;
 }
 
 static u8 psoc_read8(u8 offset)
 {
-	u8 value = 0;
-	u8 buf = 0;
+    u8 value = 0;
+    u8 buf = 0;
     
-    if(psoc_ipmi_read(&buf, offset, 1) == 1)
+    if(psoc_ipmi_read(&buf, offset, 1) == 1){
         value = buf;
+    }
     
-	return value;
+    return value;
 }
 
 /*
@@ -635,6 +638,8 @@ static ssize_t show_psu_psoc(struct device *dev, struct device_attribute *da,
 	return sprintf(buf, "%ld \n", pmbus_reg2data_linear(status, offset ));
 }
 
+
+#if LINUX_VERSION_CODE <  KERNEL_VERSION(4,19,0)
 static ssize_t show_name(struct device *dev,
 			struct device_attribute *devattr, char *buf)
 {
@@ -642,6 +647,7 @@ static ssize_t show_name(struct device *dev,
 }
 
 static DEVICE_ATTR(name, S_IRUGO, show_name, NULL);
+#endif
 static SENSOR_DEVICE_ATTR(temp1_input, S_IRUGO,			show_thermal, 0, 0);
 static SENSOR_DEVICE_ATTR(temp2_input, S_IRUGO,			show_thermal, 0, 1);
 static SENSOR_DEVICE_ATTR(temp3_input, S_IRUGO,			show_thermal, 0, 2);
@@ -766,8 +772,10 @@ static SENSOR_DEVICE_ATTR(psu2_clei, S_IRUGO, show_clei, 0, PSU2_CLEI_INDEX );
 #endif
 
 static struct attribute *psoc_attributes[] = {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,19,0)
     //name
 	&dev_attr_name.attr,
+#endif
     //thermal
 	&sensor_dev_attr_temp1_input.dev_attr.attr,
 	&sensor_dev_attr_temp2_input.dev_attr.attr,
@@ -906,7 +914,7 @@ static const struct attribute_group psoc_group = {
 static void check_switch_temp(void)
 {
         static struct file *f;
-        mm_segment_t old_fs;
+        mm_segment_t old_fs=get_fs();
 
         set_fs(get_ds());
         f = filp_open(SWITCH_TEMPERATURE_SOCK,O_RDONLY,0644);
@@ -936,7 +944,7 @@ static int __init net_psoc_init(void)
 {
 	int ret;
 	
-	hwmon_dev = hwmon_device_register(NULL);
+	hwmon_dev = hwmon_device_register_with_info(NULL, "net_psoc", NULL, NULL, NULL);
 	if (IS_ERR(hwmon_dev)) {
 		goto fail_hwmon_device_register;
 	}	

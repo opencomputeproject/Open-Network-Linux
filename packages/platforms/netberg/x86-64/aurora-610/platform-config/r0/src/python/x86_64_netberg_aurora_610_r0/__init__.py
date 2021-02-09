@@ -8,8 +8,8 @@ class OnlPlatform_x86_64_netberg_aurora_610_r0(OnlPlatformNetberg,
     SYS_OBJECT_ID=".610.1"
 
     def baseconfig(self):
-        os.system("insmod /lib/modules/`uname -r`/onl/netberg/x86-64-netberg-aurora-610/gpio-ich.ko")
-        #self.insmod('gpio-ich.ko')
+        os.system("insmod /lib/modules/`uname -r`/kernel/drivers/gpio/gpio-ich.ko gpiobase=0")
+        os.system("insmod /lib/modules/`uname -r`/kernel/drivers/mfd/lpc_ich.ko")
         self.insmod('i2c-gpio')
         self.insmod('net_platform')
         self.insmod('net_psoc')

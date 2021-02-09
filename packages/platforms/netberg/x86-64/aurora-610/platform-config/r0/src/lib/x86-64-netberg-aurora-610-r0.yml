@@ -18,7 +18,7 @@ x86-64-netberg-aurora-610-r0:
       --stop=1
 
     kernel:
-      <<: *kernel-4-14
+      <<: *kernel-4-19
 
     args: >-
       nopat

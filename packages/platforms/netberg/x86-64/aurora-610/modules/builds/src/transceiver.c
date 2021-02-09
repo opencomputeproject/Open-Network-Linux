@@ -5,6 +5,8 @@
 #include "io_expander.h"
 #include "transceiver.h"
 
+extern int io_no_init;
+
 /* For build single module using (Ex: ONL platform) */
 #include <linux/module.h>
 
@@ -169,6 +171,52 @@ _transvr_clean_handler(struct transvr_obj_s *self);
 int
 _sfp_detect_class_by_1g_ethernet(struct transvr_obj_s* self);
 
+#define I2C_BLOCK_READ_ENABLE
+#define I2C_RETRY_COUNT (3)
+#define I2C_RETRY_DELAY_MS (10)
+static int net_i2c_smbus_read_block_data(struct i2c_client *client, u8 offset, int len, u8 *buf)
+{
+    int ret = 0;
+    int i = 0;
+
+    for (i = 0; i < I2C_RETRY_COUNT; i++) {
+        // Notes: The maximum length of the block read is 32 bytes.
+        // If the data size is greater than 32 bytes, please divided into multiple reads.
+        ret = i2c_smbus_read_i2c_block_data(client, offset, len, buf);
+        if (ret < 0) {
+            msleep(I2C_RETRY_DELAY_MS);
+            continue;
+        }
+        break;
+    }
+
+    if (i >= I2C_RETRY_COUNT) {
+        SWPS_ERR("%s fail:offset:0x%x try %d/%d! Error Code: %d\n", __func__, offset, i, I2C_RETRY_COUNT, ret);
+    }
+
+    return ret;
+}
+
+static int net_i2c_smbus_read_byte_data(struct i2c_client *client, u8 offset)
+{
+    int ret = 0;
+    int i = 0;
+
+    for (i = 0; i < I2C_RETRY_COUNT; i++) {
+        ret = i2c_smbus_read_byte_data(client, offset);
+        if (ret < 0) {
+            msleep(I2C_RETRY_DELAY_MS);
+            continue;
+        }
+        break;
+    }
+
+    if (i >= I2C_RETRY_COUNT) {
+        SWPS_ERR("%s fail:offset:0x%x try %d/%d! Error Code: %d\n", __func__, offset, i, I2C_RETRY_COUNT, ret);
+    }
+
+    return ret;
+}
 
 void
 lock_transvr_obj(struct transvr_obj_s *self) {
@@ -378,7 +426,7 @@ _common_update_uint8_attr(struct transvr_obj_s *self,
         goto err_common_update_uint8_attr;
     }
     for (i=0; i<len; i++) {
-        err = i2c_smbus_read_byte_data(self->i2c_client_p, (offset + i));
+        err = net_i2c_smbus_read_byte_data(self->i2c_client_p, (offset + i));
         if (err < 0){
             emsg = "I2C R/W fail!";
             goto err_common_update_uint8_attr;
@@ -446,7 +494,6 @@ _common_update_string_attr(struct transvr_obj_s *self,
                            char *caller,
                            int show_e){
 
-    int   i;
     int   err  = DEBUG_TRANSVR_INT_VAL;
     char *emsg = DEBUG_TRANSVR_STR_VAL;
 
@@ -455,6 +502,8 @@ _common_update_string_attr(struct transvr_obj_s *self,
         emsg = "setup EEPROM page fail";
         goto err_common_update_string_attr;
     }
+    #ifndef I2C_BLOCK_READ_ENABLE
+    int i;
     for (i=0; i<len; i++) {
         err = i2c_smbus_read_byte_data(self->i2c_client_p, (offset + i));
         if (err < 0){
@@ -463,6 +512,14 @@ _common_update_string_attr(struct transvr_obj_s *self,
         }
         buf[i] = (char)err;
     }
+    #else
+    err = net_i2c_smbus_read_block_data(self->i2c_client_p, offset, len, buf);
+        if (err < 0){
+            emsg = "I2C R/W fail!";
+            goto err_common_update_string_attr;
+        }
+    #endif
+    
     return 0;
 
 err_common_update_string_attr:
@@ -2185,7 +2242,7 @@ sfp_get_transvr_rx_power(struct transvr_obj_s *self,
     }
     /* Return Unit: 1 mW */
     return _common_count_rx_power(self->curr_rx_power[0],
-                                  self->curr_rx_power[0],
+                                  self->curr_rx_power[1],
                                   buf_p);
 }
 
@@ -4830,6 +4887,11 @@ _taskfunc_qsfp_setup_power_mod(struct transvr_obj_s *self,
     int curr_val   = DEBUG_TRANSVR_INT_VAL;
     int err_val    = DEBUG_TRANSVR_INT_VAL;
     char *err_msg  = DEBUG_TRANSVR_STR_VAL;
+    if (io_no_init) {
+
+        SWPS_INFO("%s no_io_init\n",__func__);
+        return EVENT_TRANSVR_TASK_DONE;
+    }
 
     curr_val = self->ioexp_obj_p->get_lpmod(self->ioexp_obj_p,
                                             self->ioexp_virt_offset);

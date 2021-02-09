@@ -36,6 +36,8 @@
 
 #include "platform_lib.h"
 
+bool bmc_enable = false;
+
 const char*
 onlp_sysi_platform_get(void)
 {   
@@ -44,7 +46,24 @@ onlp_sysi_platform_get(void)
 
 int
 onlp_sysi_init(void)
-{    
+{
+    /* check if the platform is bmc enabled */
+    if ( onlp_sysi_bmc_en_get() ) {
+        bmc_enable = true;
+        //AIM_LOG_INFO("BMC detected on platform!");
+        AIM_SYSLOG_INFO(
+                                "BMC detected on platform!",
+                                "BMC detected on platform!",
+                                "BMC detected on platform!");
+    } else {
+        bmc_enable = false;
+        //AIM_LOG_INFO("BMC NOT detected on platform!");
+        AIM_SYSLOG_INFO(
+                                "BMC NOT detected on platform!",
+                                "BMC NOT detected on platform!",
+                                "BMC NOT detected on platform!");
+    }
+
     return ONLP_STATUS_OK;
 }
 
@@ -72,23 +91,33 @@ onlp_sysi_oids_get(onlp_oid_t* table, int max)
     memset(table, 0, max*sizeof(onlp_oid_t));
     int i;
 
-     /* 2 PSUs */
-    *e++ = ONLP_PSU_ID_CREATE(1);
-    *e++ = ONLP_PSU_ID_CREATE(2);
+    if ( !bmc_enable ) {
+        /* 2 PSUs */
+        *e++ = ONLP_PSU_ID_CREATE(1);
+        *e++ = ONLP_PSU_ID_CREATE(2);
 
-    /* LEDs Item */
-    for (i=1; i<=LED_NUM; i++) {
-        *e++ = ONLP_LED_ID_CREATE(i);
+        /* LEDs Item */
+        for (i=1; i<=LED_NUM; i++) {
+            *e++ = ONLP_LED_ID_CREATE(i);
+        }
+
+        /* Fans Item */
+        for (i=1; i<=FAN_NUM; i++) {
+            *e++ = ONLP_FAN_ID_CREATE(i);
+        }
     }
 
-     /* THERMALs Item */
-    for (i=1; i<=THERMAL_NUM; i++) {
-        *e++ = ONLP_THERMAL_ID_CREATE(i);
-    }
-
-    /* Fans Item */
-    for (i=1; i<=FAN_NUM; i++) {
-        *e++ = ONLP_FAN_ID_CREATE(i);
+    /* THERMALs Item */
+    if ( !bmc_enable ) {
+        for (i=1; i<=THERMAL_NUM; i++) {
+            *e++ = ONLP_THERMAL_ID_CREATE(i);
+        }
+    } else {
+        *e++ = THERMAL_OID_CPU1;
+        *e++ = THERMAL_OID_CPU2;
+        *e++ = THERMAL_OID_CPU3;
+        *e++ = THERMAL_OID_CPU4;
+        *e++ = THERMAL_OID_CPU_BOARD;
     }
 
     return ONLP_STATUS_OK;
@@ -157,7 +186,11 @@ onlp_sysi_platform_manage_fans(void)
     static int ori_temp = 0;
     onlp_thermal_info_t thermal_info;
     memset(&thermal_info, 0, sizeof(thermal_info));
-    
+
+    if ( bmc_enable ) {
+        return ONLP_STATUS_E_UNSUPPORTED;
+    }
+ 
     /* get new temperature */
     if ((rc = platform_thermal_temp_get(&thermal_temp)) != ONLP_STATUS_OK) {
         goto _EXIT;
@@ -222,6 +255,11 @@ onlp_sysi_platform_manage_leds(void)
                            FAN_OID_FAN6, 
                            FAN_OID_FAN7, 
                            FAN_OID_FAN8, };
+
+    if ( bmc_enable ) {
+        return ONLP_STATUS_E_UNSUPPORTED;
+    }
+
 
     /* PSU LED CTRL */
     if ((rc = onlp_psui_info_get(PSU_OID_PSU1, &psu_info)) != ONLP_STATUS_OK) {

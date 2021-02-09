@@ -7,6 +7,7 @@
 
 static struct ioexp_obj_s *ioexp_head_p = NULL;
 static struct ioexp_obj_s *ioexp_tail_p = NULL;
+extern int io_no_init;
 
 /* ========== Register IOEXP layout ==========
  */
@@ -391,7 +392,11 @@ _common_ioexp_update_one(struct ioexp_obj_s *self,
     for(data_id=0; data_id<data_width; data_id++){
         /* Read from IOEXP */
         r_offset = ioexp_addr->read_offset[data_id];
-        buf = i2c_smbus_read_byte_data(_get_i2c_client(self, chip_id), r_offset);
+        if (r_offset < 0) {
+            SWPS_DEBUG("skip a read_offset <%d>\n", r_offset);
+            continue;
+        }
+	buf = i2c_smbus_read_byte_data(_get_i2c_client(self, chip_id), r_offset);
         /* Check error */
         if (buf < 0) {
             err = 1;
@@ -801,32 +806,36 @@ common_ioexp_init(struct ioexp_obj_s *self) {
     if (self->mode == IOEXP_MODE_DIRECT) {
         goto update_common_ioexp_init;
     }
-    /* Setup default value to each physical IO Expander */
-    for (chip_id=0; chip_id<(self->ioexp_map_p->chip_amount); chip_id++){
-        /* Get address mapping */
-        addr_p = &(self->ioexp_map_p->map_addr[chip_id]);
-        if (!addr_p){
-            SWPS_ERR("%s: IOEXP config incorrect! <chip_id>:%d \n",
-                     __func__, chip_id);
-            return -1;
-        }
-        /* Setup default value */
-        for (offset=0; offset<(self->ioexp_map_p->data_width); offset++){
-            
-            /* [Desc] Skip the setup default value behavior
-               [Note] Setup default value = -1 if you don't want to write the value to IOEXP or CPLD
-            */
-            if(addr_p->write_offset[offset] < 0){ 
-                SWPS_DEBUG("skip a write_offset <%d>\n", addr_p->conf_offset[offset]);
-                continue;
+    
+    if (!io_no_init){ /*normal init*/ 
+   
+        /* Setup default value to each physical IO Expander */
+        for (chip_id=0; chip_id<(self->ioexp_map_p->chip_amount); chip_id++){
+            /* Get address mapping */
+            addr_p = &(self->ioexp_map_p->map_addr[chip_id]);
+            if (!addr_p){
+                SWPS_ERR("%s: IOEXP config incorrect! <chip_id>:%d \n",
+                        __func__, chip_id);
+                return -1;
             }
-            err_code = i2c_smbus_write_byte_data(_get_i2c_client(self, chip_id),
-                                                 addr_p->write_offset[offset],
-                                                 addr_p->data_default[offset]);
-            if (err_code < 0){
-                SWPS_ERR("%s: set default fail! <error>:%d \n",
-                         __func__, err_code);
-                return ERR_IOEXP_UNEXCPT;
+            /* Setup default value */
+           for (offset=0; offset<(self->ioexp_map_p->data_width); offset++){
+  
+                /* [Desc] Skip the setup default value behavior
+                   [Note] Setup default value = -1 if you don't want to write the value to IOEXP or CPLD
+                */
+                if(addr_p->write_offset[offset] < 0){ 
+                    SWPS_DEBUG("skip a write_offset <%d>\n", addr_p->conf_offset[offset]);
+                    continue;
+                }
+                err_code = i2c_smbus_write_byte_data(_get_i2c_client(self, chip_id),
+                                                     addr_p->write_offset[offset],
+                                                     addr_p->data_default[offset]);
+                if (err_code < 0){
+                    SWPS_ERR("%s: set default fail! <error>:%d \n",
+                             __func__, err_code);
+                    return ERR_IOEXP_UNEXCPT;
+                }
             }
         }
     }
@@ -1333,6 +1342,13 @@ setup_ioexp_config(struct ioexp_obj_s *self) {
 
     int chip_id, offset, err_code;
     struct ioexp_addr_s *addr_p;
+
+    if (io_no_init) {
+
+        SWPS_INFO("io_no_init:%d \n", io_no_init);
+        return 0;
+    }
+
 
     for (chip_id=0; chip_id<(self->ioexp_map_p->chip_amount); chip_id++){
         addr_p = &(self->ioexp_map_p->map_addr[chip_id]);

@@ -21,16 +21,17 @@ static int auto_config;
 static int flag_i2c_reset;
 static int flag_mod_state;
 static unsigned gpio_rest_mux;
+static int gpio_base = 0;
 static struct class *swp_class_p = NULL;
 static struct net_platform_s *platform_p = NULL;
 static struct net_ioexp_layout_s *ioexp_layout = NULL;
 static struct net_port_layout_s *port_layout = NULL;
-
+int io_no_init = 0;
+module_param(io_no_init, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
 static void swp_polling_worker(struct work_struct *work);
 static DECLARE_DELAYED_WORK(swp_polling, swp_polling_worker);
 
 static int reset_i2c_topology(void);
-
 
 static int
 __swp_match(struct device *dev,
@@ -299,6 +300,14 @@ show_attr_block_poll(struct device *dev_p,
     return snprintf(buf_p, 8, "%d\n", block_polling);
 }
 
+static ssize_t
+show_attr_io_no_init(struct device *dev_p,
+                             struct device_attribute *attr_p,
+                                                  char *buf_p){
+
+    return snprintf(buf_p, 8, "%d\n", io_no_init);
+}
+
 
 static int
 _check_reset_pwd(const char *buf_p,
@@ -433,6 +442,26 @@ store_attr_block_poll( struct device *dev_p,
     
     return count;
 }
+
+static ssize_t
+store_attr_io_no_init( struct device *dev_p,
+                       struct device_attribute *attr_p,
+                       const char *buf_p,
+                       size_t count){
+
+    int input_val = sscanf_2_int(buf_p);
+
+    if ((input_val != 0) && (input_val != 1)) {
+        return -EBFONT;
+    }
+
+    if(input_val != io_no_init){
+        io_no_init = input_val;
+    }
+
+    return count;
+}
+
 /* ========== Show functions: For transceiver attribute ==========
  */
 static ssize_t
@@ -1678,6 +1707,7 @@ static DEVICE_ATTR(reset_i2c,       S_IWUSR,         NULL,                      
 static DEVICE_ATTR(reset_swps,      S_IWUSR,         NULL,                      store_attr_reset_swps);
 static DEVICE_ATTR(auto_config,     S_IRUGO|S_IWUSR, show_attr_auto_config,     store_attr_auto_config);
 static DEVICE_ATTR(block_poll,      S_IRUGO|S_IWUSR, show_attr_block_poll,      store_attr_block_poll);
+static DEVICE_ATTR(io_no_init,      S_IRUGO|S_IWUSR, show_attr_io_no_init,      store_attr_io_no_init);
 
 /* ========== Transceiver attribute: from eeprom ==========
  */
@@ -2108,6 +2138,24 @@ check_transvr_obj_one(char *dev_name){
     return -1;
 }
 
+static int
+check_transvr_obj_one_with_measuring(char *dev_name){
+    struct timeval begin, end;
+    unsigned long val;
+    int err_code;
+    const int WARNING_TIME_MS = 100;
+
+    do_gettimeofday(&begin);
+    err_code = check_transvr_obj_one(dev_name);
+    do_gettimeofday(&end);
+    val = (end.tv_sec - begin.tv_sec) * 1000;
+    val += ((end.tv_usec - begin.tv_usec) / 1000);
+    if (val > WARNING_TIME_MS) {
+            SWPS_INFO("%s takes %lums\n", dev_name, val);
+    }
+
+    return err_code;
+}
 
 static int
 check_transvr_objs(void){
@@ -2122,7 +2170,7 @@ check_transvr_objs(void){
         memset(dev_name, 0, sizeof(dev_name));
         snprintf(dev_name, sizeof(dev_name), "%s%d", SWP_DEV_PORT, port_id);
         /* Handle current status */
-        err_code = check_transvr_obj_one(dev_name);
+        err_code = check_transvr_obj_one_with_measuring(dev_name);
         switch (err_code) {
             case  0:
             case -1:
@@ -2578,6 +2626,11 @@ register_modctl_attr(struct device *device_p){
         err_msg = "dev_attr_block_poll";
         goto err_reg_modctl_attr;
     }
+    if (device_create_file(device_p, &dev_attr_io_no_init) < 0) {
+        err_msg = "dev_attr_io_no_init";
+        goto err_reg_modctl_attr;
+    }
+
     return 0;
 
 err_reg_modctl_attr:
@@ -2694,14 +2747,14 @@ register_swp_module(void){
 
     dev_t ctl_devt  = 0;
     dev_t port_devt = 0;
-    int dev_total = port_total + 1; /* char_dev for module control */
+    // int dev_total = port_total + 1; /* char_dev for module control */
 
     /* Register device number */
     if (alloc_chrdev_region(&ctl_devt, 0, 1, SWP_DEV_MODCTL) < 0){
         SWPS_WARN("Allocate CTL MAJOR failure! \n");
         goto err_register_swp_module_1;
     }
-    if (alloc_chrdev_region(&port_devt, 0, dev_total, SWP_CLS_NAME) < 0){
+    if (alloc_chrdev_region(&port_devt, 0, port_total, SWP_CLS_NAME) < 0){
         SWPS_WARN("Allocate PORT MAJOR failure! \n");
         goto err_register_swp_module_2;
     }
@@ -2975,7 +3028,6 @@ err_init_mux:
 err_init_portobj:
     clean_ioexp_objs();
 err_init_ioexp:
-    class_unregister(swp_class_p);
     class_destroy(swp_class_p);
     unregister_chrdev_region(MKDEV(ctl_major, 0), 1);
     unregister_chrdev_region(MKDEV(port_major, 0), port_total);
@@ -2992,7 +3044,6 @@ swp_module_exit(void){
     clean_port_objs();
     clean_ioexp_objs();
     clean_mux_objs();
-    class_unregister(swp_class_p);
     class_destroy(swp_class_p);
     unregister_chrdev_region(MKDEV(ctl_major, 0), 1);
     unregister_chrdev_region(MKDEV(port_major, 0), port_total);
@@ -3005,6 +3056,7 @@ MODULE_AUTHOR(SWP_AUTHOR);
 MODULE_DESCRIPTION(SWP_DESC);
 MODULE_VERSION(SWP_VERSION);
 MODULE_LICENSE(SWP_LICENSE);
+module_param(gpio_base, int, S_IRUGO);
 MODULE_SOFTDEP("pre: net_platform");
 
 module_init(swp_module_init);

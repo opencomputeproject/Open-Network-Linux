@@ -42,11 +42,15 @@
 #define SYS_PSU2_NEAR_TEMP_PREFIX   "/sys/class/hwmon/hwmon7/"
 #define SYS_MAC_REAR_TEMP_PREFIX    "/sys/class/hwmon/hwmon5/"
 #define SYS_QSFP_NEAR_TEMP_PREFIX   "/sys/class/hwmon/hwmon6/"
+
+#define SYS_BMC_CPU_BOARD_TEMP_PREFIX   "/sys/class/hwmon/hwmon1/"
+
 #define SYS_FAN_PREFIX              "/sys/class/hwmon/hwmon1/device/"
 #define SYS_EEPROM_PATH             "/sys/bus/i2c/devices/0-0055/eeprom"
 #define SYS_EEPROM_SIZE 512
 #define PSU1_EEPROM_PATH            "/sys/bus/i2c/devices/58-0050/eeprom"
 #define PSU2_EEPROM_PATH            "/sys/bus/i2c/devices/57-0050/eeprom"
+#define BMC_EN_FILE_PATH            "/etc/onl/bmc_en"
 #define PSU_STATUS_PRESENT          1
 #define PSU_STATUS_POWER_GOOD       1
 #define FAN_PRESENT                 0
@@ -304,4 +308,7 @@ int sysi_platform_info_get(onlp_platform_info_t* pi);
 
 int qsfp_present_get(int port, int *pres_val);
 
+bool onlp_sysi_bmc_en_get(void);
+
+extern bool bmc_enable;
 #endif  /* __PLATFORM_LIB_H__ */

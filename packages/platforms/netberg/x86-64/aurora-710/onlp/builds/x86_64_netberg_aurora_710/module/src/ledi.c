@@ -102,6 +102,10 @@ onlp_ledi_info_get(onlp_oid_t id, onlp_led_info_t* info)
     int led_id, pw_exist, pw_good, rc, psu_mask, fan_id;
     int exist_offset, good_offset, i2c_bus;
     onlp_fan_info_t fan_info;
+    
+    if ( bmc_enable ) {
+        return ONLP_STATUS_E_UNSUPPORTED;
+    }
 
     memset(&fan_info, 0, sizeof(onlp_fan_info_t));
     led_id = ONLP_OID_ID_GET(id);
@@ -192,6 +196,10 @@ int
 onlp_ledi_mode_set(onlp_oid_t id, onlp_led_mode_t mode)
 {
     int led_id, rc;
+
+    if ( bmc_enable ) {
+        return ONLP_STATUS_E_UNSUPPORTED;
+    }
 
     led_id = ONLP_OID_ID_GET(id);
     switch (led_id) {

@@ -46,6 +46,10 @@ psu_thermal_get(onlp_thermal_info_t* info, int thermal_id)
     unsigned int temp = 0;
     char result[32];    
 
+    if ( bmc_enable ) {
+        return ONLP_STATUS_E_UNSUPPORTED;
+    }
+
     if (thermal_id == THERMAL_ID_PSU1_1) {
         i2c_bus = I2C_BUS_PSU1;
         offset = PSU_THERMAL1_OFFSET;
@@ -120,7 +124,11 @@ psu_fan_info_get(onlp_fan_info_t* info, int id)
     int pw_exist, pw_good, exist_offset, good_offset;
     int i2c_bus, psu_mask, rc;
     unsigned int tmp_fan_rpm, fan_rpm;
- 
+
+    if ( bmc_enable ) {
+        return ONLP_STATUS_E_UNSUPPORTED;
+    }
+
     if (id == FAN_ID_PSU_FAN1) {
         i2c_bus = I2C_BUS_PSU1;
         exist_offset = PSU1_PRESENT_OFFSET;
@@ -177,6 +185,10 @@ psu_vout_get(onlp_psu_info_t* info, int i2c_bus)
     char result[32];
     double dvalue;
     memset(result, 0, sizeof(result));
+
+    if ( bmc_enable ) {
+        return ONLP_STATUS_E_UNSUPPORTED;
+    }
     
     n_value = onlp_i2c_readb(i2c_bus, PSU_REG, PSU_VOUT_OFFSET1, ONLP_I2C_F_FORCE);
     if (n_value < 0) {
@@ -217,7 +229,11 @@ psu_iout_get(onlp_psu_info_t* info, int i2c_bus)
     char result[32];
     memset(result, 0, sizeof(result));
     double dvalue;   
-    
+ 
+    if ( bmc_enable ) {
+        return ONLP_STATUS_E_UNSUPPORTED;
+    }
+
     value = onlp_i2c_readw(i2c_bus, PSU_REG, PSU_IOUT_OFFSET, ONLP_I2C_F_FORCE);
     if (value < 0) {
         return ONLP_STATUS_E_INTERNAL; 
@@ -256,6 +272,10 @@ psu_pout_get(onlp_psu_info_t* info, int i2c_bus)
     char result[32];
     memset(result, 0, sizeof(result));
     double dvalue;
+
+    if ( bmc_enable ) {
+        return ONLP_STATUS_E_UNSUPPORTED;
+    }
     
     value = onlp_i2c_readw(i2c_bus, PSU_REG, PSU_POUT_OFFSET, ONLP_I2C_F_FORCE);
     if (value < 0) {
@@ -295,6 +315,10 @@ psu_pin_get(onlp_psu_info_t* info, int i2c_bus)
     char result[32];
     memset(result, 0, sizeof(result));
     double dvalue;
+
+    if ( bmc_enable ) {
+        return ONLP_STATUS_E_UNSUPPORTED;
+    }
         
     value = onlp_i2c_readw(i2c_bus, PSU_REG, PSU_PIN_OFFSET, ONLP_I2C_F_FORCE);
     if (value < 0) {
@@ -332,6 +356,10 @@ psu_eeprom_get(onlp_psu_info_t* info, int id)
     int data_len, i, rc;
     memset(data, 0, sizeof(data));
     memset(eeprom_path, 0, sizeof(eeprom_path));
+
+    if ( bmc_enable ) {
+        return ONLP_STATUS_E_UNSUPPORTED;
+    }
     
     if (id == PSU_ID_PSU1) {
         rc = onlp_file_read(data, sizeof(data), &data_len, PSU1_EEPROM_PATH);
@@ -382,6 +410,10 @@ psu_present_get(int *pw_exist, int exist_offset, int i2c_bus, int psu_mask)
 {
     int psu_pres;     
 
+    if ( bmc_enable ) {
+        return ONLP_STATUS_E_UNSUPPORTED;
+    }
+
     psu_pres = onlp_i2c_readb(i2c_bus, PSU_STATE_REG, 0x0, 
                               ONLP_I2C_F_FORCE);
     if (psu_pres < 0) {
@@ -396,6 +428,10 @@ int
 psu_pwgood_get(int *pw_good, int good_offset, int i2c_bus, int psu_mask)
 {
     int psu_pwgood;      
+    
+    if ( bmc_enable ) {
+        return ONLP_STATUS_E_UNSUPPORTED;
+    }
     
     psu_pwgood = onlp_i2c_readb(i2c_bus, PSU_STATE_REG, 0x0,
                                 ONLP_I2C_F_FORCE);
@@ -443,6 +479,11 @@ int
 system_led_set(onlp_led_mode_t mode)
 {
     int rc;
+
+    if ( bmc_enable ) {
+        return ONLP_STATUS_E_UNSUPPORTED;
+    }
+
     if(mode == ONLP_LED_MODE_GREEN) {        
         rc = onlp_i2c_modifyb(I2C_BUS_50, LED_REG, LED_OFFSET, LED_SYS_AND_MASK,
                               LED_SYS_GMASK, ONLP_I2C_F_FORCE);
@@ -466,6 +507,10 @@ fan_led_set(onlp_led_mode_t mode)
 {
     int rc;
 
+    if ( bmc_enable ) {
+        return ONLP_STATUS_E_UNSUPPORTED;
+    }
+
     if(mode == ONLP_LED_MODE_GREEN ) {
         rc = onlp_i2c_modifyb(I2C_BUS_50, LED_REG, LED_OFFSET, LED_FAN_AND_MASK,
                               LED_FAN_GMASK, ONLP_I2C_F_FORCE);
@@ -488,6 +533,11 @@ int
 psu1_led_set(onlp_led_mode_t mode)
 {
     int rc;
+
+    if ( bmc_enable ) {
+        return ONLP_STATUS_E_UNSUPPORTED;
+    }
+
     if(mode == ONLP_LED_MODE_GREEN) {    
         rc = onlp_i2c_modifyb(I2C_BUS_50, LED_REG, LED_PWOK_OFFSET,
                               LED_PSU1_ON_AND_MASK, LED_PSU1_ON_OR_MASK, 
@@ -521,6 +571,11 @@ int
 psu2_led_set(onlp_led_mode_t mode)
 {
     int rc;
+
+    if ( bmc_enable ) {
+        return ONLP_STATUS_E_UNSUPPORTED;
+    }
+
     if(mode == ONLP_LED_MODE_GREEN) {
         rc = onlp_i2c_modifyb(I2C_BUS_50, LED_REG, LED_PWOK_OFFSET, 
                               LED_PSU2_ON_AND_MASK, LED_PSU2_ON_OR_MASK, 
@@ -555,47 +610,66 @@ int
 fan_tray_led_set(onlp_oid_t id, onlp_led_mode_t mode)
 {
     int rc, temp_id;
-    int fan_tray_id, offset;
+    int offset;
+    int and_mask, or_mask;
+
+    if ( bmc_enable ) {
+        return ONLP_STATUS_E_UNSUPPORTED;
+    }
 
     temp_id = ONLP_OID_ID_GET(id);
     switch (temp_id) {
         case 5:
-            fan_tray_id = 1;
-            offset = 2;
+            // fan tray 1
+            offset = 3;
+            if (mode == ONLP_LED_MODE_GREEN) {
+                and_mask = 0xCF;
+                or_mask = 0x20;
+            } else if (mode == ONLP_LED_MODE_ORANGE) {
+                and_mask = 0xCF;
+                or_mask = 0x10;
+            }
             break;
         case 6:
-            fan_tray_id = 2;
-            offset = 2;
+            // fan tray 2
+            offset = 3;
+            if (mode == ONLP_LED_MODE_GREEN) {
+                and_mask = 0xFC;
+                or_mask = 0x02;
+            } else if (mode == ONLP_LED_MODE_ORANGE) {
+                and_mask = 0xFC;
+                or_mask = 0x01;
+            }
             break;
         case 7:
-            fan_tray_id = 3;
-            offset = 3;
+            // fan tray = 3
+            offset = 2;
+            if (mode == ONLP_LED_MODE_GREEN) {
+                and_mask = 0xCF;
+                or_mask = 0x20;
+            } else if (mode == ONLP_LED_MODE_ORANGE) {
+                and_mask = 0xCF;
+                or_mask = 0x10;
+            }
             break;
         case 8:
-            fan_tray_id = 4;
-            offset = 3;
+            // fan tray 4
+            offset = 2;
+            if (mode == ONLP_LED_MODE_GREEN) {
+                and_mask = 0xFC;
+                or_mask = 0x02;
+            } else if (mode == ONLP_LED_MODE_ORANGE) {
+                and_mask = 0xFC;
+                or_mask = 0x01;
+            }
             break;
         default:
             return ONLP_STATUS_E_INTERNAL;
             break;
     }
-    if (fan_tray_id == 1 || fan_tray_id == 3) {
-        if (mode == ONLP_LED_MODE_GREEN) {
-            rc = onlp_i2c_modifyb(I2C_BUS_59, FAN_GPIO_ADDR, offset, 0xFC,
-                                  0x02, ONLP_I2C_F_FORCE);
-        } else if (mode == ONLP_LED_MODE_ORANGE) {
-            rc = onlp_i2c_modifyb(I2C_BUS_59, FAN_GPIO_ADDR, offset, 0xFC,
-                                  0x01, ONLP_I2C_F_FORCE);
-        }
-    } else if (fan_tray_id == 2 || fan_tray_id == 4) {
-        if (mode == ONLP_LED_MODE_GREEN) {
-            rc = onlp_i2c_modifyb(I2C_BUS_59, FAN_GPIO_ADDR, offset, 0xCF,
-                                  0x20, ONLP_I2C_F_FORCE);
-        } else if (mode == ONLP_LED_MODE_ORANGE) {
-            rc = onlp_i2c_modifyb(I2C_BUS_59, FAN_GPIO_ADDR, offset, 0xCF,
-                                  0x10, ONLP_I2C_F_FORCE);
-        }
-    }
+    
+    rc = onlp_i2c_modifyb(I2C_BUS_59, FAN_GPIO_ADDR, offset, and_mask,
+                          or_mask, ONLP_I2C_F_FORCE);
     if (rc < 0) {
         return ONLP_STATUS_E_INTERNAL;
     }
@@ -622,3 +696,21 @@ sysi_platform_info_get(onlp_platform_info_t* pi)
     
     return ONLP_STATUS_OK;
 }
+
+bool
+onlp_sysi_bmc_en_get(void)
+{
+    int value;
+
+    if (onlp_file_read_int(&value, BMC_EN_FILE_PATH) < 0) {
+        // flag file not exist, default to not enable
+        return false;
+    }
+
+    /* 1 - enable, 0 - no enable */
+    if ( value )
+        return true;
+
+    return false;
+}
+

@@ -1,5 +1,5 @@
-obj-m += gpio-ich.o
 obj-m += i2c-gpio.o
+
 obj-m += net_cpld.o
 obj-m += net_platform.o
 obj-m += net_psoc.o

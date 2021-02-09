@@ -87,7 +87,7 @@ store_attr_vpd(struct device *dev_p,
 	mutex_lock(&vpd_mutex);
 
     //-strip 0x0a in the last byte.
-    for (iLen = 0, pChar = buf_p; 
+    for (iLen = 0, pChar = (char*)(buf_p); 
          iLen < 255 && *pChar != 0; 
          iLen++, pChar++) ;
     if (iLen !=0 && *pChar == 0 && *(pChar-1) == 0x0a)
