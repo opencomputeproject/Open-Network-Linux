@@ -174,7 +174,8 @@ endif
 MODSYNCLIST_DEFAULT := .config System.map Module.symvers Makefile include scripts drivers \
 			arch/x86/include arch/x86/Makefile \
 			arch/powerpc/include arch/powerpc/Makefile arch/powerpc/lib arch/powerpc/boot/dts \
-			arch/arm/include arch/arm/Makefile arch/arm/lib arch/arm/boot/dts arch/arm/kernel
+			arch/arm/include arch/arm/Makefile arch/arm/lib arch/arm/boot/dts arch/arm/kernel \
+			arch/arm64/include arch/arm64/Makefile arch/arm64/lib arch/arm64/boot/dts arch/arm64/kernel
 
 MODSYNCLIST := $(MODSYNCLIST_DEFAULT) $(MODSYNCLIST_EXTRA) $(K_MODSYNCLIST)
 
@@ -186,8 +187,17 @@ mbuild: build
 	mkdir -p $(K_MBUILD_DIR)
 	$(foreach f,$(MODSYNCLIST),$(ONL)/tools/scripts/tree-copy.sh $(K_SOURCE_DIR) $(f) $(K_MBUILD_DIR);)
 	find $(K_MBUILD_DIR) -name "*.o*" -delete
+
+# This breaks the 5.x kernel builds
+ifeq ($(shell test $(K_MAJOR_VERSION) -lt 5 && echo 1),1)
 	find $(K_MBUILD_DIR) -name "*.c" -delete
+endif
 	find $(K_MBUILD_DIR) -name "*.ko" -delete
+
+# Remove symlink directory so that build does not fail
+# Note this hack needs to be updated before Linux removes the old locations
+	find $(K_MBUILD_DIR) -type d -name include-prefixes -exec rm -rf {} +
+
 ifeq ($(ARCH), powerpc)
 	$(foreach f,$(MODSYNCKEEP), cp $(K_SOURCE_DIR)/$(f) $(K_MBUILD_DIR)/$(f) || true;)
 endif

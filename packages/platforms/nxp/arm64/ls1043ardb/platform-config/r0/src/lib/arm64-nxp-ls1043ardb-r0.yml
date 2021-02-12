@@ -9,10 +9,10 @@
 arm64-nxp-ls1043ardb-r0:
   flat_image_tree:
     kernel:
-      <<: *arm64-kernel
+      <<: *arm64-kernel-5-4
     dtb:
-      =: fsl-ls1043a-rdb-sdk.dtb
-      <<: *arm64-kernel-package
+      =: fsl-ls1043a-rdb.dtb
+      <<: *arm64-kernel-5-4-package
     itb:
       <<: *arm64-itb
 

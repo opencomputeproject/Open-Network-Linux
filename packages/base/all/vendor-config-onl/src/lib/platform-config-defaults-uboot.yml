@@ -67,6 +67,13 @@ default:
       =: kernel-4.9-lts-arm64-all.bin.gz
       <<: *arm64-kernel-package
 
+    arm64-kernel-5-4-package: &arm64-kernel-5-4-package
+      package: onl-kernel-5.4-lts-arm64-all:arm64
+
+    arm64-kernel-5-4: &arm64-kernel-5-4
+      =: kernel-5.4-lts-arm64-all.bin.gz
+      <<: *arm64-kernel-5-4-package
+
     ##############################
     #
     # For your system, pick from the above list

@@ -1,0 +1,1 @@
+!include $ONL/packages/base/any/kernels/lts/APKG.yml VERSION=5.4 ARCH=arm64 CONFIG=arm64-all
