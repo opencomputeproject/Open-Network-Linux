@@ -604,7 +604,8 @@ int
 fan_tray_led_set(onlp_oid_t id, onlp_led_mode_t mode)
 {
     int rc, temp_id;
-    int fan_tray_id, offset;
+    int offset;
+    int and_mask, or_mask;
 
     if ( bmc_enable ) {
         return ONLP_STATUS_E_UNSUPPORTED;
@@ -613,42 +614,56 @@ fan_tray_led_set(onlp_oid_t id, onlp_led_mode_t mode)
     temp_id = ONLP_OID_ID_GET(id);
     switch (temp_id) {
         case 5:
-            fan_tray_id = 1;
-            offset = 2;
+            // fan tray 1
+            offset = 3;
+            if (mode == ONLP_LED_MODE_GREEN) {
+                and_mask = 0xCF;
+                or_mask = 0x20;
+            } else if (mode == ONLP_LED_MODE_ORANGE) {
+                and_mask = 0xCF;
+                or_mask = 0x10;
+            }
             break;
         case 6:
-            fan_tray_id = 2;
-            offset = 2;
+            // fan tray 2
+            offset = 3;
+            if (mode == ONLP_LED_MODE_GREEN) {
+                and_mask = 0xFC;
+                or_mask = 0x02;
+            } else if (mode == ONLP_LED_MODE_ORANGE) {
+                and_mask = 0xFC;
+                or_mask = 0x01;
+            }
             break;
         case 7:
-            fan_tray_id = 3;
-            offset = 3;
+            // fan tray 3
+            offset = 2;
+            if (mode == ONLP_LED_MODE_GREEN) {
+                and_mask = 0xCF;
+                or_mask = 0x20;
+            } else if (mode == ONLP_LED_MODE_ORANGE) {
+                and_mask = 0xCF;
+                or_mask = 0x10;
+            }
             break;
         case 8:
-            fan_tray_id = 4;
-            offset = 3;
+            // fan tray 4
+            offset = 2;
+            if (mode == ONLP_LED_MODE_GREEN) {
+                and_mask = 0xFC;
+                or_mask = 0x02;
+            } else if (mode == ONLP_LED_MODE_ORANGE) {
+                and_mask = 0xFC;
+                or_mask = 0x01;
+            }
             break;
         default:
             return ONLP_STATUS_E_INTERNAL;
             break;
     }
-    if (fan_tray_id == 1 || fan_tray_id == 3) {
-        if (mode == ONLP_LED_MODE_GREEN) {
-            rc = onlp_i2c_modifyb(I2C_BUS_59, FAN_GPIO_ADDR, offset, 0xFC,
-                                  0x02, ONLP_I2C_F_FORCE);
-        } else if (mode == ONLP_LED_MODE_ORANGE) {
-            rc = onlp_i2c_modifyb(I2C_BUS_59, FAN_GPIO_ADDR, offset, 0xFC,
-                                  0x01, ONLP_I2C_F_FORCE);
-        }
-    } else if (fan_tray_id == 2 || fan_tray_id == 4) {
-        if (mode == ONLP_LED_MODE_GREEN) {
-            rc = onlp_i2c_modifyb(I2C_BUS_59, FAN_GPIO_ADDR, offset, 0xCF,
-                                  0x20, ONLP_I2C_F_FORCE);
-        } else if (mode == ONLP_LED_MODE_ORANGE) {
-            rc = onlp_i2c_modifyb(I2C_BUS_59, FAN_GPIO_ADDR, offset, 0xCF,
-                                  0x10, ONLP_I2C_F_FORCE);
-        }
-    }
+    
+    rc = onlp_i2c_modifyb(I2C_BUS_59, FAN_GPIO_ADDR, offset, and_mask,
+                          or_mask, ONLP_I2C_F_FORCE);
     if (rc < 0) {
         return ONLP_STATUS_E_INTERNAL;
     }

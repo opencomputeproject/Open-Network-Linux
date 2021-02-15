@@ -6,6 +6,8 @@ class OnlPlatform_x86_64_ingrasys_s9230_64x_r0(OnlPlatformIngrasys):
     PLATFORM='x86-64-ingrasys-s9230-64x-r0'
     MODEL="S9230-64X"
     SYS_OBJECT_ID=".9230.64"
+    PORT_COUNT=64
+    PORT_CONFIG="64x100"
 
     def baseconfig(self):
 

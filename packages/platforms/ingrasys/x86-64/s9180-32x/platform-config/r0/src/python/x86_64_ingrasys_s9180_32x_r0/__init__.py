@@ -14,6 +14,8 @@ class OnlPlatform_x86_64_ingrasys_s9180_32x_r0(OnlPlatformIngrasys):
     PLATFORM='x86-64-ingrasys-s9180-32x-r0'
     MODEL="S9180-32X"
     SYS_OBJECT_ID=".9180.32"
+    PORT_COUNT=32
+    PORT_CONFIG="32x100"
      
     def check_bmc_enable(self):
         # check if main mux accessable, if no, bmc enabled

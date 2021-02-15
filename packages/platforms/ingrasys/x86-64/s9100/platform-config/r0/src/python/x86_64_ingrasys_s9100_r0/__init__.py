@@ -6,6 +6,8 @@ class OnlPlatform_x86_64_ingrasys_s9100_r0(OnlPlatformIngrasys):
     PLATFORM='x86-64-ingrasys-s9100-r0'
     MODEL="s9100"
     SYS_OBJECT_ID=".8.1"
+    PORT_COUNT=32
+    PORT_CONFIG="32x100"
     
     def baseconfig(self):
                 

@@ -165,13 +165,50 @@ int sys_fan_present_get(onlp_fan_info_t* info, int id)
     return ONLP_STATUS_OK;
 }
 
+int
+get_fan_sysfs_id(int id)
+{
+    int sysfs_id;
+    switch (id)
+    {
+        case FAN_ID_FAN1:
+            sysfs_id = 8;
+            break;
+        case FAN_ID_FAN2:
+            sysfs_id = 7;
+            break;
+        case FAN_ID_FAN3:
+            sysfs_id = 6;
+            break;
+        case FAN_ID_FAN4:
+            sysfs_id = 5;
+            break;
+        case FAN_ID_FAN5:
+            sysfs_id = 4;
+            break;
+        case FAN_ID_FAN6:
+            sysfs_id = 3;
+            break;
+        case FAN_ID_FAN7:
+            sysfs_id = 2;
+            break;
+        case FAN_ID_FAN8:
+            sysfs_id = 1;
+            break;
+        default:
+            sysfs_id = 0;
+    }
+    return sysfs_id;
+}
+
 int 
 sys_fan_info_get(onlp_fan_info_t* info, int id)
 {
     int rv, fan_status, fan_rpm, perc_val, percentage;
     int max_fan_speed = 22000;
     fan_status = 0;
-    fan_rpm = 0;       
+    fan_rpm = 0;
+    int sysfs_id;
 
     if ( bmc_enable ) {
         return ONLP_STATUS_E_UNSUPPORTED;
@@ -181,8 +218,13 @@ sys_fan_info_get(onlp_fan_info_t* info, int id)
     if (rv < 0) {
         return ONLP_STATUS_E_INTERNAL;
     }
+
+    sysfs_id = get_fan_sysfs_id(id);
+    if (!sysfs_id) {
+        return ONLP_STATUS_E_INTERNAL;
+    }
  
-    rv = onlp_file_read_int(&fan_status, SYS_FAN_PREFIX "fan%d_alarm", id);
+    rv = onlp_file_read_int(&fan_status, SYS_FAN_PREFIX "fan%d_alarm", sysfs_id);
     if (rv < 0) {
         return ONLP_STATUS_E_INTERNAL;
     }
@@ -193,14 +235,14 @@ sys_fan_info_get(onlp_fan_info_t* info, int id)
         return ONLP_STATUS_OK;
     }
         
-    rv = onlp_file_read_int(&fan_rpm, SYS_FAN_PREFIX "fan%d_input", id);
+    rv = onlp_file_read_int(&fan_rpm, SYS_FAN_PREFIX "fan%d_input", sysfs_id);
     if (rv < 0) {
         return ONLP_STATUS_E_INTERNAL;
     }    
     info->rpm = fan_rpm;
     
     /* get speed percentage*/
-    switch (id)
+    switch (sysfs_id)
 	{
         case FAN_ID_FAN1:    
         case FAN_ID_FAN2:
