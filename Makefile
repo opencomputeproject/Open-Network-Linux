@@ -55,7 +55,7 @@ docker_check:
 docker: docker_check
 	@docker/tools/onlbuilder -$(VERSION) --isolate --hostname onlbuilder$(VERSION) --pull --autobuild --non-interactive
 
-# create an interative docker shell, for debugging builds
+# create an interactive docker shell, for debugging builds
 docker-debug: docker_check
 	@docker/tools/onlbuilder -$(VERSION) --isolate --hostname onlbuilder$(VERSION) --pull
 
