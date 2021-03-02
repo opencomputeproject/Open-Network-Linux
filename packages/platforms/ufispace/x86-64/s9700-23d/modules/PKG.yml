@@ -1,0 +1,1 @@
+!include $ONL_TEMPLATES/platform-modules.yml ARCH=amd64 VENDOR=ufispace BASENAME=x86-64-ufispace-s9700-23d KERNELS="onl-kernel-4.19-lts-x86-64-all:amd64"

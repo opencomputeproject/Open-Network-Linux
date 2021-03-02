@@ -1,0 +1,30 @@
+---
+
+######################################################################
+#
+# platform-config for x86-64-ufispace-s9700-23d
+#
+######################################################################
+
+x86-64-ufispace-s9700-23d-r2:
+
+  grub:
+
+    serial: >-
+      --port=0x3f8
+      --speed=115200
+      --word=8
+      --parity=no
+      --stop=1
+
+    kernel:
+      <<: *kernel-4-19
+
+    args: >-
+      console=ttyS0,115200n8      
+
+  ##network
+  ##  interfaces:
+  ##    ma1:
+  ##      name: ~
+  ##      syspath: pci0000:00/0000:00:03.0

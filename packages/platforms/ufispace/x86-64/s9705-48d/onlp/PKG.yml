@@ -1,0 +1,131 @@
+############################################################
+#
+# ONLP Platform Package Template
+#
+# Requires: PLATFORM, ARCH, REVISION
+#
+############################################################
+
+variables:
+  PLATFORM: x86-64-ufispace-s9705-48d
+  ARCH: amd64
+  TOOLCHAIN: x86_64-linux-gnu
+  install_r0: /lib/platform-config/${PLATFORM}-r0/onl
+  install_r1: /lib/platform-config/${PLATFORM}-r1/onl
+  install_r2: /lib/platform-config/${PLATFORM}-r2/onl
+  install_r3: /lib/platform-config/${PLATFORM}-r3/onl
+  install_r4: /lib/platform-config/${PLATFORM}-r4/onl
+  install_r5: /lib/platform-config/${PLATFORM}-r5/onl
+  install_r6: /lib/platform-config/${PLATFORM}-r6/onl
+  install_r7: /lib/platform-config/${PLATFORM}-r7/onl
+  install_r8: /lib/platform-config/${PLATFORM}-r8/onl
+  install_r9: /lib/platform-config/${PLATFORM}-r9/onl
+
+common:
+  version: 1.0.0
+  arch: $ARCH
+  copyright: Copyright 2013, 2014, 2015 Big Switch Networks
+  maintainer: support@bigswitch.com
+  support: opennetworklinux@googlegroups.com
+
+packages:
+  - name: onlp-${PLATFORM}-r0
+    summary: ONLP Package for the ${PLATFORM}-r0 platform.
+    platform-config: True
+
+    files:
+      builds/lib/$BUILD_DIR/$TOOLCHAIN/bin/libonlp-${PLATFORM}.so : ${install_r0}/lib/
+      builds/onlpdump/$BUILD_DIR/$TOOLCHAIN/bin/onlps : ${install_r0}/bin/onlpdump
+
+    changelog:  Change changes changes.,
+
+  - name: onlp-${PLATFORM}-r1
+    summary: ONLP Package for the ${PLATFORM}-r1 platform.
+    platform-config: True
+
+    files:
+      builds/lib/$BUILD_DIR/$TOOLCHAIN/bin/libonlp-${PLATFORM}.so : ${install_r1}/lib/
+      builds/onlpdump/$BUILD_DIR/$TOOLCHAIN/bin/onlps : ${install_r1}/bin/onlpdump
+
+    changelog:  Change changes changes.,
+
+  - name: onlp-${PLATFORM}-r2
+    summary: ONLP Package for the ${PLATFORM}-r2 platform.
+    platform-config: True
+
+    files:
+      builds/lib/$BUILD_DIR/$TOOLCHAIN/bin/libonlp-${PLATFORM}.so : ${install_r2}/lib/
+      builds/onlpdump/$BUILD_DIR/$TOOLCHAIN/bin/onlps : ${install_r2}/bin/onlpdump
+
+    changelog:  Change changes changes.,
+
+  - name: onlp-${PLATFORM}-r3
+    summary: ONLP Package for the ${PLATFORM}-r3 platform.
+    platform-config: True
+
+    files:
+      builds/lib/$BUILD_DIR/$TOOLCHAIN/bin/libonlp-${PLATFORM}.so : ${install_r3}/lib/
+      builds/onlpdump/$BUILD_DIR/$TOOLCHAIN/bin/onlps : ${install_r3}/bin/onlpdump
+
+    changelog:  Change changes changes.,
+
+  - name: onlp-${PLATFORM}-r4
+    summary: ONLP Package for the ${PLATFORM}-r4 platform.
+    platform-config: True
+
+    files:
+      builds/lib/$BUILD_DIR/$TOOLCHAIN/bin/libonlp-${PLATFORM}.so : ${install_r4}/lib/
+      builds/onlpdump/$BUILD_DIR/$TOOLCHAIN/bin/onlps : ${install_r4}/bin/onlpdump
+
+    changelog:  Change changes changes.,
+
+  - name: onlp-${PLATFORM}-r5
+    summary: ONLP Package for the ${PLATFORM}-r5 platform.
+    platform-config: True
+
+    files:
+      builds/lib/$BUILD_DIR/$TOOLCHAIN/bin/libonlp-${PLATFORM}.so : ${install_r5}/lib/
+      builds/onlpdump/$BUILD_DIR/$TOOLCHAIN/bin/onlps : ${install_r5}/bin/onlpdump
+
+    changelog:  Change changes changes.,
+
+  - name: onlp-${PLATFORM}-r6
+    summary: ONLP Package for the ${PLATFORM}-r6 platform.
+    platform-config: True
+
+    files:
+      builds/lib/$BUILD_DIR/$TOOLCHAIN/bin/libonlp-${PLATFORM}.so : ${install_r6}/lib/
+      builds/onlpdump/$BUILD_DIR/$TOOLCHAIN/bin/onlps : ${install_r6}/bin/onlpdump
+
+    changelog:  Change changes changes.,
+
+  - name: onlp-${PLATFORM}-r7
+    summary: ONLP Package for the ${PLATFORM}-r7 platform.
+    platform-config: True
+
+    files:
+      builds/lib/$BUILD_DIR/$TOOLCHAIN/bin/libonlp-${PLATFORM}.so : ${install_r7}/lib/
+      builds/onlpdump/$BUILD_DIR/$TOOLCHAIN/bin/onlps : ${install_r7}/bin/onlpdump
+
+    changelog:  Change changes changes.,
+
+  - name: onlp-${PLATFORM}-r8
+    summary: ONLP Package for the ${PLATFORM}-r8 platform.
+    platform-config: True
+
+    files:
+      builds/lib/$BUILD_DIR/$TOOLCHAIN/bin/libonlp-${PLATFORM}.so : ${install_r8}/lib/
+      builds/onlpdump/$BUILD_DIR/$TOOLCHAIN/bin/onlps : ${install_r8}/bin/onlpdump
+
+    changelog:  Change changes changes.,
+
+  - name: onlp-${PLATFORM}-r9
+    summary: ONLP Package for the ${PLATFORM}-r9 platform.
+    platform-config: True
+
+    files:
+      builds/lib/$BUILD_DIR/$TOOLCHAIN/bin/libonlp-${PLATFORM}.so : ${install_r9}/lib/
+      builds/onlpdump/$BUILD_DIR/$TOOLCHAIN/bin/onlps : ${install_r9}/bin/onlpdump
+
+    changelog:  Change changes changes.,
+
