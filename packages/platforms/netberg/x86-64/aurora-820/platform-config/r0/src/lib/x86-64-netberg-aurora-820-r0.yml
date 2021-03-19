@@ -1,0 +1,31 @@
+---
+
+######################################################################
+#
+# platform-config for aurora-820
+#
+######################################################################
+
+x86-64-netberg-aurora-820-r0:
+
+  grub:
+
+    serial: >-
+      --port=0x3f8
+      --speed=115200
+      --word=8
+      --parity=no
+      --stop=1
+
+    kernel:
+      <<: *kernel-4-14
+
+    args: >-
+      nopat
+      console=ttyS0,115200n8
+
+  ##network
+  ##  interfaces:
+  ##    ma1:
+  ##      name: ~
+  ##      syspath: pci0000:00/0000:00:14.0
