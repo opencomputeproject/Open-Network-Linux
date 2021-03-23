@@ -135,8 +135,10 @@ onlp_psui_info_get(onlp_oid_t id, onlp_psu_info_t* info)
     if (string && len) {
         strncpy(info->serial, string, len);
     }
+
     if (string) {
         aim_free(string);
+        string = NULL;
     }
     bus = pmbus_cfg[zid][0];
     offset = pmbus_cfg[zid][1];
@@ -167,8 +169,10 @@ onlp_psui_info_get(onlp_oid_t id, onlp_psu_info_t* info)
         strncpy(info->model, string, len);
         info->caps |= get_DCorAC_cap (info->model);
     }
+
     if (string) {
         aim_free(string);
+        string = NULL;
     }
 
     /* Set the associated oid_table */

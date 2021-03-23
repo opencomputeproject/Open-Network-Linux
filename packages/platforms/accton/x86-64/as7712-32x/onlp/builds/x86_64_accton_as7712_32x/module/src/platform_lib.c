@@ -208,6 +208,9 @@ psu_type_t get_psu_type(int id, char* modelname, int modelname_len)
         char *prefix = (id == PSU1_ID) ? PSU1_AC_PMBUS_PREFIX : PSU2_AC_PMBUS_PREFIX;
         int len = onlp_file_read_str(&string, "%s""psu_fan_dir", prefix);
         if (!string || len <= 0) {
+            if (string) {
+                aim_free(string);
+            }
             return PSU_TYPE_UNKNOWN;
         }
 
@@ -256,6 +259,9 @@ int psu_acbel_serial_number_get(int id, char *serial, int serial_len)
     
     int len = onlp_file_read_str(&serial_number, "%s""psu_serial_number", prefix);
     if (!serial_number || len <= 0) {
+        if (serial_number) {
+            aim_free(serial_number);
+        }
         return ONLP_STATUS_E_INTERNAL;
     }
 

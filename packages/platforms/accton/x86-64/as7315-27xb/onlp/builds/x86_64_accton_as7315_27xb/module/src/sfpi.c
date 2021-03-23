@@ -140,8 +140,10 @@ onlp_sfpi_presence_bitmap_get(onlp_sfp_bitmap_t* dst)
             AIM_LOG_ERROR("Unable to read presence_bitmap\r\n");
             return ONLP_STATUS_E_INTERNAL;
         }
-        bmp[i] = strtoul(string, NULL, 16);
-        aim_free( string );
+        if (string) {
+            bmp[i] = strtoul(string, NULL, 16);
+            aim_free(string);
+        }
     }
 
     presence_all = start = 0;
@@ -184,8 +186,10 @@ onlp_sfpi_rx_los_bitmap_get(onlp_sfp_bitmap_t* dst)
             AIM_LOG_ERROR("Unable to read presence_bitmap\r\n");
             return ONLP_STATUS_E_INTERNAL;
         }
-        bmp[i] = strtoul(string, NULL, 16);
-        aim_free(string);
+        if (string) {
+            bmp[i] = strtoul(string, NULL, 16);
+            aim_free(string);
+        }
     }
 
     all_bmp = start = 0;

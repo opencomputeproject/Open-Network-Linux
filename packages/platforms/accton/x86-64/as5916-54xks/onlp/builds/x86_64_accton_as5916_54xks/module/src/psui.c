@@ -140,7 +140,11 @@ onlp_psui_info_get(onlp_oid_t id, onlp_psu_info_t* info)
     if (string && len) {
         memcpy(info->model, string, len);
         info->model[len] = '\0';
+    }
+
+    if (string) {
         aim_free(string);
+        string = NULL;
     }
 
     /* Read serial */
@@ -148,7 +152,11 @@ onlp_psui_info_get(onlp_oid_t id, onlp_psu_info_t* info)
     if (string && len) {
         memcpy(info->serial, string, len);
         info->serial[len] = '\0';
+    }
+
+    if (string) {
         aim_free(string);
+        string = NULL;
     }
 
     return ret;
