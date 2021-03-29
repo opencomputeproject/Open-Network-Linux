@@ -59,6 +59,9 @@ if [ -d /newroot/sys/firmware/efi/efivars ]; then
 fi
 mount --move /dev /newroot/dev
 
+# Generate ssh host keys if needed
+chroot /newroot onl-ssh --init
+
 # Switch to /newroot if possible, else re-execute /init
 if [ -x /newroot/sbin/init ]; then
     exec switch_root -c /dev/console /newroot /sbin/init

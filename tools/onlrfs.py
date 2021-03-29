@@ -416,6 +416,13 @@ dpkg --configure -a || true
 dpkg --configure -a # configure any packages that failed the first time and abort on failure.
 
 rm -f /usr/sbin/policy-rc.d
+
+# Replace generated host keys with symlinks to ONL-CONFIG.
+# Host keys are individual for each host, generated at boot
+# when missing and preserved on reinstall and upgrade.
+for f in /etc/ssh/ssh_host_*key*; do
+    ln -snf "/mnt/onl/config/ssh/${f##*/}" "$f"
+done
     """)
 
         logger.info("dpkg-configure filesystem...")

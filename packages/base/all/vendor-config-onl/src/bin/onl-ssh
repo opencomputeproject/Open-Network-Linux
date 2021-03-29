@@ -1,0 +1,3 @@
+#!/usr/bin/python
+from onl.ssh import OnlSSH
+OnlSSH.main()
