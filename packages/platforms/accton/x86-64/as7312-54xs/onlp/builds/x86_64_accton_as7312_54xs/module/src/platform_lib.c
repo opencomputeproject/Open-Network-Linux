@@ -6,6 +6,14 @@
 #include <onlp/platformi/sfpi.h>
 #include "x86_64_accton_as7312_54xs_log.h"
 
+#define AIM_FREE_IF_PTR(p) \
+    do \
+    { \
+        if (p) { \
+            aim_free(p); \
+            p = NULL; \
+        } \
+    } while (0)
 
 static int _onlp_file_write(char *filename, char *buffer, int buf_size, int data_len)
 {
@@ -111,12 +119,12 @@ psu_type_t get_psu_type(int id, char* modelname, int modelname_len)
             aim_strlcpy(modelname, model_name, sizeof(model_name));
         }
 
-        char *fd = aim_zmalloc(PSU_FAN_DIR_LEN + 1);
+        char *fd = NULL;
         
         node = (id == PSU1_ID) ? PSU1_AC_PMBUS_NODE(psu_fan_dir) : PSU2_AC_PMBUS_NODE(psu_fan_dir);
         ret = onlp_file_read_str(&fd, node);
 
-        if (ret <= 0 || ret > PSU_FAN_DIR_LEN) {
+        if (ret <= 0 || ret > PSU_FAN_DIR_LEN || fd == NULL) {
             ptype = PSU_TYPE_UNKNOWN;
         }
         else if (strncmp(fd, "F2B", PSU_FAN_DIR_LEN) == 0) {
@@ -126,7 +134,7 @@ psu_type_t get_psu_type(int id, char* modelname, int modelname_len)
             ptype = PSU_TYPE_AC_B2F;
         }
 
-        aim_free(fd);
+        AIM_FREE_IF_PTR(fd);
     }
 
     if (strncmp(model_name, "YM-2651V", 8) == 0) {
@@ -134,12 +142,12 @@ psu_type_t get_psu_type(int id, char* modelname, int modelname_len)
             aim_strlcpy(modelname, model_name, sizeof(model_name));
         }
 
-        char *fd = aim_zmalloc(PSU_FAN_DIR_LEN + 1);
+        char *fd = NULL;
         
         node = (id == PSU1_ID) ? PSU1_AC_PMBUS_NODE(psu_fan_dir) : PSU2_AC_PMBUS_NODE(psu_fan_dir);
         ret = onlp_file_read_str(&fd, node);
 
-        if (ret <= 0 || ret > PSU_FAN_DIR_LEN) {
+        if (ret <= 0 || ret > PSU_FAN_DIR_LEN || fd == NULL) {
             ptype = PSU_TYPE_UNKNOWN;
         }
         else if (strncmp(fd, "F2B", PSU_FAN_DIR_LEN) == 0) {
@@ -149,7 +157,7 @@ psu_type_t get_psu_type(int id, char* modelname, int modelname_len)
             ptype = PSU_TYPE_DC_48V_B2F;
         }
 
-        aim_free(fd);
+        AIM_FREE_IF_PTR(fd);
     }
 
     return ptype;

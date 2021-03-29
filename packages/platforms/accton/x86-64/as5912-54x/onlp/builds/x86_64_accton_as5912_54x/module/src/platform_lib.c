@@ -30,6 +30,14 @@
 #include "platform_lib.h"
 
 #define PSU_NODE_MAX_PATH_LEN 64
+#define AIM_FREE_IF_PTR(p) \
+    do \
+    { \
+        if (p) { \
+            aim_free(p); \
+            p = NULL; \
+        } \
+    } while (0)
 
 int _onlp_file_write(char *filename, char *buffer, int buf_size, int data_len)
 {
@@ -137,11 +145,12 @@ psu_type_t get_psu_type(int id, char* modelname, int modelname_len)
         {
             aim_strlcpy(modelname, model_name, sizeof(model_name));
         }
-        char *fan_str = aim_zmalloc(PSU_FAN_DIR_LEN + 1);
+
+        char *fan_str = NULL;
 
         node = (id == PSU1_ID) ? PSU1_AC_PMBUS_NODE(psu_fan_dir) : PSU2_AC_PMBUS_NODE(psu_fan_dir);
         ret = onlp_file_read_str(&fan_str, node);
-        if (ret <= 0 || ret > PSU_FAN_DIR_LEN)
+        if (ret <= 0 || ret > PSU_FAN_DIR_LEN || fan_str == NULL)
         {
             ptype = PSU_TYPE_UNKNOWN;
         }
@@ -154,7 +163,7 @@ psu_type_t get_psu_type(int id, char* modelname, int modelname_len)
             ptype = PSU_TYPE_AC_B2F;
         }
 
-        aim_free(fan_str);
+        AIM_FREE_IF_PTR(fan_str);
     }
     if (strncmp(model_name, "YM-2651V", 8) == 0)
     {
@@ -163,11 +172,11 @@ psu_type_t get_psu_type(int id, char* modelname, int modelname_len)
             aim_strlcpy(modelname, model_name, sizeof(model_name));
         }
 
-        char *fan_str = aim_zmalloc(PSU_FAN_DIR_LEN + 1);
-        
+        char *fan_str = NULL;
+
         node = (id == PSU1_ID) ? PSU1_AC_PMBUS_NODE(psu_fan_dir) : PSU2_AC_PMBUS_NODE(psu_fan_dir);
         ret = onlp_file_read_str(&fan_str, node);
-        if (ret <= 0 || ret > PSU_FAN_DIR_LEN)
+        if (ret <= 0 || ret > PSU_FAN_DIR_LEN || fan_str == NULL)
         {
             ptype = PSU_TYPE_UNKNOWN;
         }
@@ -180,7 +189,7 @@ psu_type_t get_psu_type(int id, char* modelname, int modelname_len)
             ptype = PSU_TYPE_DC_48V_B2F;
         }
 
-        aim_free(fan_str);
+        AIM_FREE_IF_PTR(fan_str);
     }
 
     return ptype;

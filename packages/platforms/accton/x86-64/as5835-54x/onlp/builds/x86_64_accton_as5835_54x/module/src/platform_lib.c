@@ -33,22 +33,26 @@
 #define PSU_FAN_DIR_LEN         3
 #define PSU_MODEL_NAME_LEN 		11
 #define PSU_SERIAL_NUMBER_LEN	18
+#define AIM_FREE_IF_PTR(p) \
+    do \
+    { \
+        if (p) { \
+            aim_free(p); \
+            p = NULL; \
+        } \
+    } while (0)
 
 int get_psu_serial_number(int id, char *serial, int serial_len)
 {
     int   ret  = 0;
 	char *node = NULL;
-    char *sn = aim_zmalloc(PSU_SERIAL_NUMBER_LEN + 1);
+    char *sn = NULL;
 
-    if (!sn) {
-        return ONLP_STATUS_E_INTERNAL;
-    }
-    
     /* Read AC serial number */
     node = (id == PSU1_ID) ? PSU1_AC_HWMON_NODE(psu_serial_numer) : PSU2_AC_HWMON_NODE(psu_serial_numer);
     ret = onlp_file_read_str(&sn, node);
-    if (ret <= 0 || ret > PSU_SERIAL_NUMBER_LEN) {
-        aim_free(sn);
+    if (ret <= 0 || ret > PSU_SERIAL_NUMBER_LEN || sn == NULL) {
+        AIM_FREE_IF_PTR(sn);
         return ONLP_STATUS_E_INVALID;
     }
 
@@ -56,7 +60,7 @@ int get_psu_serial_number(int id, char *serial, int serial_len)
         strncpy(serial, sn, PSU_SERIAL_NUMBER_LEN+1);
     }
 
-    aim_free(sn);
+    AIM_FREE_IF_PTR(sn);
 	return ONLP_STATUS_OK;
 }
 
@@ -64,28 +68,28 @@ psu_type_t get_psu_type(int id, char* modelname, int modelname_len)
 {
     int   ret = 0;
     char *node = NULL;
-    char *mn = aim_zmalloc(PSU_MODEL_NAME_LEN + 1);
+    char *mn = NULL;
     psu_type_t ptype = PSU_TYPE_UNKNOWN;
 
     /* Check AC model name */
     node = (id == PSU1_ID) ? PSU1_AC_HWMON_NODE(psu_model_name) : PSU2_AC_HWMON_NODE(psu_model_name);
     ret = onlp_file_read_str(&mn, node);
     if (ret <= 0 || ret > PSU_MODEL_NAME_LEN) {
-        aim_free(mn);
+        AIM_FREE_IF_PTR(mn);
         return PSU_TYPE_UNKNOWN;
     }
 
     if (modelname) {
         strncpy(modelname, mn, PSU_MODEL_NAME_LEN + 1);
     }
-    
+
     if (strncmp(mn, "YM-1401A", 8) == 0) {
-        char *fd = aim_zmalloc(PSU_FAN_DIR_LEN + 1 + 1);
+        char *fd = NULL;
         
         node = (id == PSU1_ID) ? PSU1_AC_PMBUS_NODE(psu_fan_dir) : PSU1_AC_PMBUS_NODE(psu_fan_dir);
         ret = onlp_file_read_str(&fd, node);
 
-        if (ret <= 0 || ret > PSU_FAN_DIR_LEN) {
+        if (ret <= 0 || ret > PSU_FAN_DIR_LEN || fd == NULL) {
             ptype = PSU_TYPE_UNKNOWN;
         }
         else if (strncmp(fd, "B2F", PSU_FAN_DIR_LEN) == 0) {
@@ -95,7 +99,7 @@ psu_type_t get_psu_type(int id, char* modelname, int modelname_len)
             ptype = PSU_TYPE_AC_F2B;
         }
 
-        aim_free(fd);
+        AIM_FREE_IF_PTR(fd);
     }
     else if (strncmp(mn, "DPS400AB33A", PSU_MODEL_NAME_LEN) == 0) {
         ptype = PSU_TYPE_AC_F2B;
@@ -104,7 +108,7 @@ psu_type_t get_psu_type(int id, char* modelname, int modelname_len)
         ptype = PSU_TYPE_AC_B2F;
     }
 
-    aim_free(mn);
+    AIM_FREE_IF_PTR(mn);
     return ptype;
 }
 
