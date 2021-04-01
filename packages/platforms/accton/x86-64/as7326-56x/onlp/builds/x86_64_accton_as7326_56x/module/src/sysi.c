@@ -65,15 +65,24 @@ onlp_sysi_platform_get(void)
 int
 onlp_sysi_onie_data_get(uint8_t** data, int* size)
 {
-    uint8_t* rdata = aim_zmalloc(256);
-
-    if(onlp_file_read(rdata, 256, size, IDPROM_PATH) == ONLP_STATUS_OK) {
-        if(*size == 256) {
-            *data = rdata;
-            return ONLP_STATUS_OK;
+    const int len = 256;
+    uint8_t* rdata = aim_zmalloc(len);
+    char *paths[] = {IDPROM_PATH_2, IDPROM_PATH_1};
+    int  ret = ONLP_STATUS_OK;
+    int i;
+    
+    for (i = 0 ; i < AIM_ARRAYSIZE(paths); i++ ){
+        ret = onlp_file_open(O_RDONLY, 0, paths[i]);
+        if (ret >= 0) {
+            close(ret);
+            if(onlp_file_read(rdata, len, size, paths[i]) == ONLP_STATUS_OK) {
+                if(*size == len) {
+                    *data = rdata;
+                    return ONLP_STATUS_OK;
+                }
+            }
         }
     }
-
     aim_free(rdata);
     *size = 0;
     return ONLP_STATUS_E_INTERNAL;
