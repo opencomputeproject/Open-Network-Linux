@@ -97,6 +97,12 @@ psu_type_t get_psu_type(int id, char* modelname, int modelname_len)
 
         aim_free(fd);
     }
+    else if (strncmp(mn, "YM-2401HCR", 10) == 0) {
+        ptype = PSU_TYPE_DC_F2B;
+    }
+    else if (strncmp(mn, "YM-2401HDR", 10) == 0) {
+        ptype = PSU_TYPE_DC_B2F;
+    }
     else if (strncmp(mn, "DPS400AB33A", PSU_MODEL_NAME_LEN) == 0) {
         ptype = PSU_TYPE_AC_F2B;
     }

@@ -68,15 +68,15 @@ onlp_psui_init(void)
 }
 
 static int
-psu_ym1401_info_get(onlp_psu_info_t* info)
+psu_ym1401_info_get(onlp_psu_info_t* info, bool is_dc_input)
 {
     int val   = 0;
     int index = ONLP_OID_ID_GET(info->hdr.id);
     
     /* Set capability
      */
-    info->caps = ONLP_PSU_CAPS_AC;
-    
+    info->caps = (is_dc_input)? ONLP_PSU_CAPS_DC48 : ONLP_PSU_CAPS_AC;
+
 	if (info->status & ONLP_PSU_STATUS_FAILED) {
 	    return ONLP_STATUS_OK;
 	}
@@ -162,7 +162,9 @@ onlp_psui_info_get(onlp_oid_t id, onlp_psu_info_t* info)
     switch (psu_type) {
         case PSU_TYPE_AC_F2B:
         case PSU_TYPE_AC_B2F:
-            ret = psu_ym1401_info_get(info);
+        case PSU_TYPE_DC_F2B:
+        case PSU_TYPE_DC_B2F:
+            ret = psu_ym1401_info_get(info, IS_DC_INPUT(psu_type));
             break;
         case PSU_TYPE_UNKNOWN:  /* User insert a unknown PSU or unplugged.*/
             info->status |= ONLP_PSU_STATUS_UNPLUGGED;

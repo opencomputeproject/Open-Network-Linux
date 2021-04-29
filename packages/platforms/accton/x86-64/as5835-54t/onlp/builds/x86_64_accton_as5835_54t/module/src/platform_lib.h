@@ -69,11 +69,15 @@ enum onlp_thermal_id
 typedef enum psu_type {
     PSU_TYPE_UNKNOWN,
     PSU_TYPE_AC_F2B,
-    PSU_TYPE_AC_B2F
+    PSU_TYPE_AC_B2F,
+    PSU_TYPE_DC_F2B,
+    PSU_TYPE_DC_B2F
 } psu_type_t;
 
 psu_type_t get_psu_type(int id, char* modelname, int modelname_len);
 int get_psu_serial_number(int id, char *serial, int serial_len);
+
+#define IS_DC_INPUT(psu_type) (PSU_TYPE_DC_F2B == psu_type || PSU_TYPE_DC_B2F == psu_type)
 
 #define DEBUG_MODE 0
 

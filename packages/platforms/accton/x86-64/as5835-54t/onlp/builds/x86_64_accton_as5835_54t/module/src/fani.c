@@ -167,7 +167,7 @@ _onlp_get_fan_direction_on_psu(void)
             continue;
         }
 
-        if (PSU_TYPE_AC_F2B == psu_type) {
+        if (PSU_TYPE_AC_F2B == psu_type || PSU_TYPE_DC_F2B == psu_type) {
             return ONLP_FAN_STATUS_F2B;
         }
         else {
