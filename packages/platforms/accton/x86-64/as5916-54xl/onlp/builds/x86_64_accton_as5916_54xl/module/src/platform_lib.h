@@ -28,7 +28,7 @@
 
 #include "x86_64_accton_as5916_54xl_log.h"
 
-#define CHASSIS_FAN_COUNT		6
+#define CHASSIS_FAN_COUNT		12
 #define CHASSIS_THERMAL_COUNT	5
 #define CHASSIS_LED_COUNT		5
 #define CHASSIS_PSU_COUNT		2

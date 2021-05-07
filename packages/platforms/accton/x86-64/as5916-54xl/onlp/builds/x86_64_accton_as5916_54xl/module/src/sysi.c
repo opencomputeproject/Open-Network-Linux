@@ -81,7 +81,7 @@ onlp_sysi_oids_get(onlp_oid_t* table, int max)
         *e++ = ONLP_PSU_ID_CREATE(i);
     }
 
-    /* 6 Fans on the chassis */
+    /* 12 Fans on the chassis */
     for (i = 1; i <= CHASSIS_FAN_COUNT; i++) {
         *e++ = ONLP_FAN_ID_CREATE(i);
     }

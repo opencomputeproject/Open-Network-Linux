@@ -34,6 +34,12 @@ enum fan_id {
 	FAN_4_ON_FAN_BOARD,
 	FAN_5_ON_FAN_BOARD,
 	FAN_6_ON_FAN_BOARD,
+	FAN_7_ON_FAN_BOARD,
+	FAN_8_ON_FAN_BOARD,
+	FAN_9_ON_FAN_BOARD,
+	FAN_10_ON_FAN_BOARD,
+	FAN_11_ON_FAN_BOARD,
+	FAN_12_ON_FAN_BOARD,
 	FAN_1_ON_PSU_1,
 	FAN_1_ON_PSU_2,
 };
@@ -43,7 +49,17 @@ enum fan_id {
 
 #define CHASSIS_FAN_INFO(fid)		\
     { \
-        { ONLP_FAN_ID_CREATE(FAN_##fid##_ON_FAN_BOARD), "Chassis Fan - "#fid, 0 },\
+        { ONLP_FAN_ID_CREATE(FAN_##fid##_ON_FAN_BOARD), "Chassis Fan - "#fid" Front", 0 },\
+        0x0,\
+        ONLP_FAN_CAPS_SET_PERCENTAGE | ONLP_FAN_CAPS_GET_RPM | ONLP_FAN_CAPS_GET_PERCENTAGE,\
+        0,\
+        0,\
+        ONLP_FAN_MODE_INVALID,\
+    }
+
+#define CHASSIS_REAR_FAN_INFO(fid, tid)		\
+    { \
+        { ONLP_FAN_ID_CREATE(FAN_##fid##_ON_FAN_BOARD), "Chassis Fan - "#tid" Rear", 0 },\
         0x0,\
         ONLP_FAN_CAPS_SET_PERCENTAGE | ONLP_FAN_CAPS_GET_RPM | ONLP_FAN_CAPS_GET_PERCENTAGE,\
         0,\
@@ -70,6 +86,12 @@ onlp_fan_info_t finfo[] = {
 	CHASSIS_FAN_INFO(4),
 	CHASSIS_FAN_INFO(5),
 	CHASSIS_FAN_INFO(6),
+	CHASSIS_REAR_FAN_INFO(7, 1),
+	CHASSIS_REAR_FAN_INFO(8, 2),
+	CHASSIS_REAR_FAN_INFO(9, 3),
+	CHASSIS_REAR_FAN_INFO(10, 4),
+	CHASSIS_REAR_FAN_INFO(11, 5),
+	CHASSIS_REAR_FAN_INFO(12, 6),
 	PSU_FAN_INFO(1, 1),
 	PSU_FAN_INFO(2, 1)
 };
@@ -189,6 +211,12 @@ onlp_fani_info_get(onlp_oid_t id, onlp_fan_info_t* info)
         case FAN_4_ON_FAN_BOARD:
         case FAN_5_ON_FAN_BOARD:
         case FAN_6_ON_FAN_BOARD:
+        case FAN_7_ON_FAN_BOARD:
+        case FAN_8_ON_FAN_BOARD:
+        case FAN_9_ON_FAN_BOARD:
+        case FAN_10_ON_FAN_BOARD:
+        case FAN_11_ON_FAN_BOARD:
+        case FAN_12_ON_FAN_BOARD:
             rc =_onlp_fani_info_get_fan(fid, info);						
             break;
         default:
@@ -221,7 +249,7 @@ onlp_fani_percentage_set(onlp_oid_t id, int p)
         return ONLP_STATUS_E_INVALID;
     }
 
-    if (fid < FAN_1_ON_FAN_BOARD || fid > FAN_6_ON_FAN_BOARD) {
+    if (fid < FAN_1_ON_FAN_BOARD || fid > FAN_12_ON_FAN_BOARD) {
         return ONLP_STATUS_E_INVALID;
     }
 

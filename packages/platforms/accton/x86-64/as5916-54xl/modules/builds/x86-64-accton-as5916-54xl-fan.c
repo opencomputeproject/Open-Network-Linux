@@ -52,7 +52,14 @@ enum fan_id {
     FAN_4,
     FAN_5,
     FAN_6,
-    NUM_OF_FAN
+    FAN_7,
+    FAN_8,
+    FAN_9,
+    FAN_10,
+    FAN_11,
+    FAN_12,
+    NUM_OF_FAN,
+    NUM_OF_FAN_TRAY = 6
 };
 
 enum fan_data_index {
@@ -85,7 +92,7 @@ struct as5916_54xl_fan_data {
     struct mutex     update_lock;
     char             valid;           /* != 0 if registers are valid */
     unsigned long    last_updated;    /* In jiffies */
-    unsigned char    ipmi_resp[24];
+    unsigned char    ipmi_resp[48];
     struct ipmi_data ipmi;
     unsigned char ipmi_tx_data[3];  /* 0: FAN id, 1: 0x02, 2: PWM */
 };
@@ -117,6 +124,12 @@ enum as5916_54x_fan_sysfs_attrs {
     FAN_ATTR(4),
     FAN_ATTR(5),
     FAN_ATTR(6),
+    FAN_ATTR(7),
+    FAN_ATTR(8),
+    FAN_ATTR(9),
+    FAN_ATTR(10),
+    FAN_ATTR(11),
+    FAN_ATTR(12),
     NUM_OF_FAN_ATTR,
     NUM_OF_PER_FAN_ATTR = (NUM_OF_FAN_ATTR/NUM_OF_FAN)
 };
@@ -137,6 +150,12 @@ DECLARE_FAN_SENSOR_DEVICE_ATTR(3);
 DECLARE_FAN_SENSOR_DEVICE_ATTR(4);
 DECLARE_FAN_SENSOR_DEVICE_ATTR(5);
 DECLARE_FAN_SENSOR_DEVICE_ATTR(6);
+DECLARE_FAN_SENSOR_DEVICE_ATTR(7);
+DECLARE_FAN_SENSOR_DEVICE_ATTR(8);
+DECLARE_FAN_SENSOR_DEVICE_ATTR(9);
+DECLARE_FAN_SENSOR_DEVICE_ATTR(10);
+DECLARE_FAN_SENSOR_DEVICE_ATTR(11);
+DECLARE_FAN_SENSOR_DEVICE_ATTR(12);
 
 static struct attribute *as5916_54xl_fan_attributes[] = {
     /* fan attributes */
@@ -146,6 +165,12 @@ static struct attribute *as5916_54xl_fan_attributes[] = {
     DECLARE_FAN_ATTR(4),
     DECLARE_FAN_ATTR(5),
     DECLARE_FAN_ATTR(6),
+    DECLARE_FAN_ATTR(7),
+    DECLARE_FAN_ATTR(8),
+    DECLARE_FAN_ATTR(9),
+    DECLARE_FAN_ATTR(10),
+    DECLARE_FAN_ATTR(11),
+    DECLARE_FAN_ATTR(12),
     NULL
 };
 
@@ -295,6 +320,7 @@ static ssize_t show_fan(struct device *dev, struct device_attribute *da, char *b
     unsigned char fid = attr->index / NUM_OF_PER_FAN_ATTR;
     int value = 0;
     int index = 0;
+    int tray_index = 0;
     int present = 0;
     int error = 0;
 
@@ -307,7 +333,8 @@ static ssize_t show_fan(struct device *dev, struct device_attribute *da, char *b
     }
 
     index = fid * FAN_DATA_COUNT; /* base index */
-    present = !data->ipmi_resp[index + FAN_PRESENT];
+    tray_index = (fid % NUM_OF_FAN_TRAY) * FAN_DATA_COUNT;
+    present = !data->ipmi_resp[tray_index + FAN_PRESENT];
 
 	switch (attr->index) {
 		case FAN1_PRESENT:
@@ -316,7 +343,13 @@ static ssize_t show_fan(struct device *dev, struct device_attribute *da, char *b
         case FAN4_PRESENT:
         case FAN5_PRESENT:
         case FAN6_PRESENT:
-            value = !data->ipmi_resp[index + FAN_PRESENT];
+        case FAN7_PRESENT:
+        case FAN8_PRESENT:
+        case FAN9_PRESENT:
+        case FAN10_PRESENT:
+        case FAN11_PRESENT:
+        case FAN12_PRESENT:
+            value = !data->ipmi_resp[tray_index + FAN_PRESENT];
             break;
 		case FAN1_PWM:
         case FAN2_PWM:
@@ -324,7 +357,13 @@ static ssize_t show_fan(struct device *dev, struct device_attribute *da, char *b
         case FAN4_PWM:
         case FAN5_PWM:
         case FAN6_PWM:
-            value = (data->ipmi_resp[index + FAN_PWM] + 1) * 625 / 100;
+        case FAN7_PWM:
+        case FAN8_PWM:
+        case FAN9_PWM:
+        case FAN10_PWM:
+        case FAN11_PWM:
+        case FAN12_PWM:
+            value = (data->ipmi_resp[tray_index + FAN_PWM] + 1) * 625 / 100;
             break;
 		case FAN1_INPUT:
         case FAN2_INPUT:
@@ -332,6 +371,12 @@ static ssize_t show_fan(struct device *dev, struct device_attribute *da, char *b
         case FAN4_INPUT:
         case FAN5_INPUT:
         case FAN6_INPUT:
+        case FAN7_INPUT:
+        case FAN8_INPUT:
+        case FAN9_INPUT:
+        case FAN10_INPUT:
+        case FAN11_INPUT:
+        case FAN12_INPUT:
             value = (int)data->ipmi_resp[index + FAN_SPEED0] | 
                     (int)data->ipmi_resp[index + FAN_SPEED1] << 8;
             break;
