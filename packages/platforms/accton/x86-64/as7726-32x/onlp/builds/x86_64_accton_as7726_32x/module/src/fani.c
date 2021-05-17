@@ -182,11 +182,17 @@ _onlp_get_fan_direction_on_psu(void)
             continue;
         }
 
-        if (PSU_TYPE_AC_F2B == psu_type) {
-            return ONLP_FAN_STATUS_F2B;
-        }
-        else {
-            return ONLP_FAN_STATUS_B2F;
+        switch (psu_type) {
+            case PSU_TYPE_AC_F2B_3YPOWER:
+            case PSU_TYPE_AC_F2B_ACBEL:
+            case PSU_TYPE_DC_48V_F2B:
+                return ONLP_FAN_STATUS_F2B;
+            case PSU_TYPE_AC_B2F_3YPOWER:
+            case PSU_TYPE_AC_B2F_ACBEL:
+            case PSU_TYPE_DC_48V_B2F:
+                return ONLP_FAN_STATUS_B2F;
+            default:
+                return 0;
         }
     }
 
@@ -206,15 +212,15 @@ _onlp_fani_info_get_fan_on_psu(int pid, onlp_fan_info_t* info)
 
     /* get fan fault status
      */
-    if (psu_ym2651y_pmbus_info_get(pid, "psu_fan1_fault", &val) == ONLP_STATUS_OK) {
+    if (psu_pmbus_info_get(pid, "psu_fan1_fault", &val) == ONLP_STATUS_OK) {
         info->status |= (val > 0) ? ONLP_FAN_STATUS_FAILED : 0;
     }
 
     /* get fan speed
      */
-    if (psu_ym2651y_pmbus_info_get(pid, "psu_fan1_speed_rpm", &val) == ONLP_STATUS_OK) {
+    if (psu_pmbus_info_get(pid, "psu_fan1_speed_rpm", &val) == ONLP_STATUS_OK) {
         info->rpm = val;
-	    info->percentage = (info->rpm * 100) / MAX_PSU_FAN_SPEED;	    
+	    info->percentage = (info->rpm * 100) / MAX_PSU_FAN_SPEED;
     }
 
     return ONLP_STATUS_OK;
@@ -303,9 +309,9 @@ onlp_fani_percentage_set(onlp_oid_t id, int p)
     switch (fid)
 	{
         case FAN_1_ON_PSU_1:
-			return psu_ym2651y_pmbus_info_set(PSU1_ID, "psu_fan_duty_cycle_percentage", p);
+            return psu_pmbus_info_set(PSU1_ID, "psu_fan_duty_cycle_percentage", p);
         case FAN_1_ON_PSU_2:
-			return psu_ym2651y_pmbus_info_set(PSU2_ID, "psu_fan_duty_cycle_percentage", p);
+            return psu_pmbus_info_set(PSU2_ID, "psu_fan_duty_cycle_percentage", p);
         case FAN_1_ON_FAN_BOARD:
         case FAN_2_ON_FAN_BOARD:
         case FAN_3_ON_FAN_BOARD:

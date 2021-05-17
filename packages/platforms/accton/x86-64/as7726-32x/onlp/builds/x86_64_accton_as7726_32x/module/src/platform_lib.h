@@ -63,17 +63,22 @@ int onlp_file_read_binary(char *filename, char *buffer, int buf_size, int data_l
 int onlp_file_read_string(char *filename, char *buffer, int buf_size, int data_len);
 
 
-int psu_ym2651y_pmbus_info_get(int id, char *node, int *value);
-int psu_ym2651y_pmbus_info_set(int id, char *node, int value);
+int psu_pmbus_info_get(int id, char *node, int *value);
+int psu_pmbus_info_set(int id, char *node, int value);
 
 typedef enum psu_type {
     PSU_TYPE_UNKNOWN,
-    PSU_TYPE_AC_F2B,
-    PSU_TYPE_AC_B2F
+    PSU_TYPE_AC_F2B_3YPOWER,
+    PSU_TYPE_AC_B2F_3YPOWER,
+    PSU_TYPE_AC_F2B_ACBEL,
+    PSU_TYPE_AC_B2F_ACBEL,
+    PSU_TYPE_DC_48V_F2B,
+    PSU_TYPE_DC_48V_B2F
 } psu_type_t;
 
 psu_type_t get_psu_type(int id, char* modelname, int modelname_len);
-int psu_serial_number_get(int id, char *serial, int serial_len);
+int psu_pmbus_serial_number_get(int id, char *serial, int serial_len);
+int psu_acbel_serial_number_get(int id, char *serial, int serial_len);
 
 //#define DEBUG_MODE 1
 

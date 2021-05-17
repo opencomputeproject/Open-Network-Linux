@@ -34,14 +34,24 @@
 #include <linux/delay.h>
 #include <linux/dmi.h>
 
+#define MAX_MODEL_NAME          16
+#define MAX_SERIAL_NUMBER       19
+
 static ssize_t show_status(struct device *dev, struct device_attribute *da, char *buf);
-static ssize_t show_model_name(struct device *dev, struct device_attribute *da, char *buf);
+static ssize_t show_string(struct device *dev, struct device_attribute *da, char *buf);
 static int as7726_32x_psu_read_block(struct i2c_client *client, u8 command, u8 *data,int data_len);
 extern int as7726_32x_cpld_read(unsigned short cpld_addr, u8 reg);
 
 /* Addresses scanned
  */
 static const unsigned short normal_i2c[] = { 0x50, 0x53, I2C_CLIENT_END };
+
+enum psu_type {
+    PSU_TYPE_AC_110V,
+    PSU_TYPE_DC_48V,
+    PSU_TYPE_DC_12V,
+    PSU_TYPE_AC_ACBEL_FSF019
+};
 
 /* Each client has this additional data
  */
@@ -52,7 +62,9 @@ struct as7726_32x_psu_data {
     unsigned long       last_updated;    /* In jiffies */
     u8  index;           /* PSU index */
     u8  status;          /* Status(present/power_good) register read from CPLD */
-    char model_name[9]; /* Model name, read from eeprom */
+    char model_name[MAX_MODEL_NAME+1]; /* Model name, read from eeprom */
+    char serial_number[MAX_SERIAL_NUMBER];
+    enum psu_type       type;
 };
 
 static struct as7726_32x_psu_data *as7726_32x_psu_update_device(struct device *dev);
@@ -60,18 +72,21 @@ static struct as7726_32x_psu_data *as7726_32x_psu_update_device(struct device *d
 enum as7726_32x_psu_sysfs_attributes {
     PSU_PRESENT,
     PSU_MODEL_NAME,
+    PSU_SERIAL_NUMBER, /* For ACBEL PSU only */
     PSU_POWER_GOOD
 };
 
 /* sysfs attributes for hwmon
  */
 static SENSOR_DEVICE_ATTR(psu_present,    S_IRUGO, show_status,    NULL, PSU_PRESENT);
-static SENSOR_DEVICE_ATTR(psu_model_name, S_IRUGO, show_model_name,NULL, PSU_MODEL_NAME);
+static SENSOR_DEVICE_ATTR(psu_model_name, S_IRUGO, show_string, NULL, PSU_MODEL_NAME);
+static SENSOR_DEVICE_ATTR(psu_serial_number, S_IRUGO, show_string, NULL, PSU_SERIAL_NUMBER);
 static SENSOR_DEVICE_ATTR(psu_power_good, S_IRUGO, show_status,    NULL, PSU_POWER_GOOD);
 
 static struct attribute *as7726_32x_psu_attributes[] = {
     &sensor_dev_attr_psu_present.dev_attr.attr,
     &sensor_dev_attr_psu_model_name.dev_attr.attr,
+    &sensor_dev_attr_psu_serial_number.dev_attr.attr,
     &sensor_dev_attr_psu_power_good.dev_attr.attr,
     NULL
 };
@@ -103,12 +118,13 @@ static ssize_t show_status(struct device *dev, struct device_attribute *da,
     return sprintf(buf, "%d\n", status);
 }
 
-static ssize_t show_model_name(struct device *dev, struct device_attribute *da,
-                               char *buf)
+static ssize_t show_string(struct device *dev, struct device_attribute *da,
+             char *buf)
 {
 	struct i2c_client *client = to_i2c_client(dev);
 	struct as7726_32x_psu_data *data = i2c_get_clientdata(client);
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
+    char *ptr = NULL;
 
     mutex_lock(&data->update_lock);
 
@@ -118,8 +134,20 @@ static ssize_t show_model_name(struct device *dev, struct device_attribute *da,
         return -EIO;
     }
 
+    switch (attr->index) {
+    case PSU_MODEL_NAME:
+        ptr = data->model_name;
+        break;
+    case PSU_SERIAL_NUMBER:
+        ptr = data->serial_number;
+        break;
+    default:
+        mutex_unlock(&data->update_lock);
+        return -EINVAL;
+    }
+
     mutex_unlock(&data->update_lock);
-    return sprintf(buf, "%s\n", data->model_name);
+    return sprintf(buf, "%s\n", ptr);
 }
 
 static const struct attribute_group as7726_32x_psu_group = {
@@ -241,6 +269,83 @@ static int as7726_32x_psu_read_block(struct i2c_client *client, u8 command, u8 *
     return result;
 }
 
+struct model_name_info {
+    enum psu_type type;
+    u8 offset;
+    u8 length;
+    u8 chk_length;
+    char* model_name;
+};
+
+static int acbel_psu_serial_number_get(struct device *dev)
+{
+    struct i2c_client *client = to_i2c_client(dev);
+    struct as7726_32x_psu_data *data = i2c_get_clientdata(client);
+    int status;
+
+    memset(data->serial_number, 0, sizeof(data->serial_number));
+
+    /* Read from offset 0x2e ~ 0x3d (16 bytes) */
+    status = as7726_32x_psu_read_block(client, 0x2e,data->serial_number, 16);
+    if (status < 0) {
+        data->serial_number[0] = '\0';
+        dev_dbg(&client->dev, "unable to read model name from (0x%x) offset(0x2e)\n", client->addr);
+        return status;
+    }
+
+    /* Read from offset 0x4f ~ 0x50 (2 bytes) */
+    status = as7726_32x_psu_read_block(client, 0x4f, data->serial_number + 16, 2);
+    if (status < 0) {
+        data->serial_number[0] = '\0';
+        dev_dbg(&client->dev, "unable to read model name from (0x%x) offset(0x4f)\n", client->addr);
+        return status;
+    }
+
+    return 0;
+}
+
+struct model_name_info models[] = {
+{PSU_TYPE_AC_110V, 0x20, 8, 8,  "YM-2651Y"},
+{PSU_TYPE_DC_48V,  0x20, 8, 8,  "YM-2651V"},
+{PSU_TYPE_DC_12V,  0x00, 11, 11, "PSU-12V-750"},
+{PSU_TYPE_AC_ACBEL_FSF019, 0x15, 10, 7, "FSF019-"}
+};
+
+static int as7726_32x_psu_model_name_get(struct device *dev)
+{
+    struct i2c_client *client = to_i2c_client(dev);
+    struct as7726_32x_psu_data *data = i2c_get_clientdata(client);
+    int i, status;
+
+    for (i = 0; i < ARRAY_SIZE(models); i++) {
+        memset(data->model_name, 0, sizeof(data->model_name));
+
+        status = as7726_32x_psu_read_block(client, models[i].offset,
+                                           data->model_name, models[i].length);
+        if (status < 0) {
+            data->model_name[0] = '\0';
+            dev_dbg(&client->dev, "unable to read model name from (0x%x) offset(0x%x)\n",
+                                  client->addr, models[i].offset);
+            return status;
+        }
+        else {
+            data->model_name[models[i].length] = '\0';
+        }
+
+        /* Determine if the model name is known, if not, read next index
+         */
+        if (strncmp(data->model_name, models[i].model_name, models[i].chk_length) == 0) {
+            data->type = models[i].type;
+            return 0;
+        }
+        else {
+            data->model_name[0] = '\0';
+        }
+    }
+
+    return -ENODATA;
+}
+
 static struct as7726_32x_psu_data *as7726_32x_psu_update_device(struct device *dev)
 {
     struct i2c_client *client = to_i2c_client(dev);
@@ -252,6 +357,7 @@ static struct as7726_32x_psu_data *as7726_32x_psu_update_device(struct device *d
         int status;
         int power_good = 0;
 
+        data->valid = 0;
         dev_dbg(&client->dev, "Starting as7726_32x update\n");
 
         /* Read psu status */
@@ -259,6 +365,7 @@ static struct as7726_32x_psu_data *as7726_32x_psu_update_device(struct device *d
 
         if (status < 0) {
             dev_dbg(&client->dev, "cpld reg 0x60 err %d\n", status);
+            goto exit;
         }
         else {
             data->status = status;
@@ -269,14 +376,12 @@ static struct as7726_32x_psu_data *as7726_32x_psu_update_device(struct device *d
         power_good = (data->status >> (3-data->index) & 0x1);
 
         if (power_good) {
-            status = as7726_32x_psu_read_block(client, 0x20, data->model_name,
-                                               ARRAY_SIZE(data->model_name)-1);
-            if (status < 0) {
-                data->model_name[0] = '\0';
-                dev_dbg(&client->dev, "unable to read model name from (0x%x)\n", client->addr);
+            if (as7726_32x_psu_model_name_get(dev) < 0) {
+                goto exit;
             }
-            else {
-                data->model_name[ARRAY_SIZE(data->model_name)-1] = '\0';
+            if (data->type == PSU_TYPE_AC_ACBEL_FSF019 &&
+                acbel_psu_serial_number_get(dev) < 0) {
+                goto exit;
             }
         }
 
@@ -284,6 +389,7 @@ static struct as7726_32x_psu_data *as7726_32x_psu_update_device(struct device *d
         data->valid = 1;
     }
 
+exit:
     return data;
 }
 

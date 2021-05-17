@@ -149,11 +149,13 @@ _onlp_fani_info_get_psu_fan_direction(void)
         }
 
 		switch (psu_type) {
-			case PSU_TYPE_AC_F2B:
+			case PSU_TYPE_AC_F2B_3YPOWER:
+            case PSU_TYPE_AC_F2B_ACBEL:
 			case PSU_TYPE_DC_48V_F2B:
 			case PSU_TYPE_DC_12V_F2B:
 				return ONLP_FAN_STATUS_F2B;
-			case PSU_TYPE_AC_B2F:
+			case PSU_TYPE_AC_B2F_3YPOWER:
+            case PSU_TYPE_AC_B2F_ACBEL:
 			case PSU_TYPE_DC_48V_B2F:
 			case PSU_TYPE_DC_12V_B2F:
 				return ONLP_FAN_STATUS_B2F;
