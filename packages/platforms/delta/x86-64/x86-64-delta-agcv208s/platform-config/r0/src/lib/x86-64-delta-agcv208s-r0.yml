@@ -1,0 +1,30 @@
+---
+
+######################################################################
+#
+# platform-config for AGCV208S
+#
+######################################################################
+
+x86-64-delta-agcv208s-r0:
+  grub:
+
+    serial: >-
+      --port=0x3f8
+      --speed=115200
+      --word=8
+      --parity=no
+      --stop=1
+
+    kernel: 
+      <<: *kernel-5-4
+
+    args: >-
+      nopat
+      console=ttyS0,115200n8
+      i2c_ismt.bus_speed=400
+  ##network
+  ##  interfaces:
+  ##    ma1:
+  ##      name: ~
+  ##      syspath: pci0000:00/0000:00:14.0
