@@ -171,7 +171,6 @@ psu_info_get_status(int id, char *data)
 
 }
 
-
 static int
 psu_stx60d0_info_get(int id, onlp_psu_info_t *info)
 {
@@ -290,6 +289,7 @@ onlp_psui_info_get(onlp_oid_t id, onlp_psu_info_t *info)
     UI8_T product_ser[PSUI_PRODUCT_SER_NO_LEN];
 
     UI8_T rps_status = 0, power_ok = 0, power_on = 0, power_present = 0;
+    int psu_busid=0; 
 
     VALIDATE(id);
 
@@ -342,16 +342,18 @@ onlp_psui_info_get(onlp_oid_t id, onlp_psu_info_t *info)
         return ONLP_STATUS_OK;
     }
 
+    psu_busid = index_to_psu_busid(index);
+
     /* Get PSU type and product name, bus ID=index+10*/
-    psu_type = get_psu_type(index + PSUI_BUS_ID_OFFSET, info->model, sizeof(info->model));
+    psu_type = get_psu_type(psu_busid, info->model, sizeof(info->model));
    
     //debug
     DIAG_PRINT("%s, id:%d, index:%d, psu_type:%d\n", __FUNCTION__, id, index, psu_type);
 
-    ret = psu_stx60d0_info_get(index + PSUI_BUS_ID_OFFSET, info); /* Get PSU electric info from PMBus */
+    ret = psu_stx60d0_info_get(psu_busid, info); /* Get PSU electric info from PMBus */
 
     /* Get the product serial number, bus ID=index+10 */
-    if (psu_info_get_product_ser(psu_type, index + PSUI_BUS_ID_OFFSET, product_ser) < 0)
+    if (psu_info_get_product_ser(psu_type, psu_busid, product_ser) < 0)
     {
         printf("Unable to read PSU(%d) item(serial number)\r\n", index);
     }

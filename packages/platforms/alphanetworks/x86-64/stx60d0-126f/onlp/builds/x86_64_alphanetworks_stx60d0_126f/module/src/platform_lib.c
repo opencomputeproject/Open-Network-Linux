@@ -990,6 +990,75 @@ char* sfp_control_to_str(int value)
     return "";
 }
 
+/* Front panel PSU-1 and PSU-2 are swapped.  
+ *
+ * Original: PSU0 at PCA9548#0 channel4
+ *              PSU1 at PCA9548#0 channel5
+ * New     : PSU0 at PCA9548#0 channel5
+ *              PSU1 at PCA9548#0 channel4
+ *
+ *Solution: According to CPLD verion to distinguish the which front panel desigen is used.
+*/
+
+static int
+psu_info_get_cpld_revision(char *data)
+{
+    int ret = 0;
+
+    ret = bmc_i2c_read_byte(BMC_CPLD_I2C_BUS_ID, BMC_CPLD_I2C_ADDR, CPLD_REVISION_OFFSET, data);
+    if (ret < 0)
+        printf("I2C command 0x%X Read Fail, BMC_CPLD_I2C_BUS_ID=%d\n", CPLD_REVISION_OFFSET, BMC_CPLD_I2C_BUS_ID);
+
+    return ret;
+
+}
+
+int
+index_to_psu_busid(int index)
+{
+    int ret = 0;
+    char version;
+
+    if (psu_info_get_cpld_revision(&version) < 0)
+    {
+        printf("Unable to read CPLD revision\r\n");
+        return ONLP_STATUS_OK;
+    }
+
+    if (version==1)
+    {
+        switch (index)
+        {
+            case PSU1_ID:
+            case PSU2_ID:
+                ret = index + PSUI_BUS_ID_OFFSET;
+                break;
+               
+            default:
+                break;        
+        }           
+    }
+    else
+    {
+        switch (index)
+        {
+            case PSU1_ID:
+                ret = PSU2_ID + PSUI_BUS_ID_OFFSET;
+                break;
+
+            case PSU2_ID:
+                ret = PSU1_ID + PSUI_BUS_ID_OFFSET;
+                break;
+               
+            default:
+                break;        
+        }           
+    }
+    
+    DIAG_PRINT("%s, psu_index:%d, psu_busid:%d ", __FUNCTION__, index, ret);
+    return ret;
+}
+
 char diag_debug_pause_platform_manage_on(void)
 {
     system("echo 1 > /tmp/onlpi_dbg_pause_pm");

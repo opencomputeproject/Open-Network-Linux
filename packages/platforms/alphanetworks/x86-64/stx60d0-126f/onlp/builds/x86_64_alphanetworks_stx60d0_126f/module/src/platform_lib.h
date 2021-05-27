@@ -37,6 +37,7 @@
 #define PSUI_BUS_ID_OFFSET      4
 #define PSU1_BUS_ID             (PSUI_BUS_ID_OFFSET + PSU1_ID)
 #define PSU2_BUS_ID             (PSUI_BUS_ID_OFFSET + PSU2_ID)
+#define CPLD_REVISION_OFFSET        0x0 /*CPLD Revision*/
 
 #define CHASSIS_THERMAL_COUNT 2
 #define CHASSIS_FAN_COUNT     4
@@ -276,5 +277,8 @@ int eeprom_tlv_read(uint8_t *rdata, char type, char *data);
 #define DIAG_PRINT(fmt,args...) DIAG_TRACE(fmt,args);else if(diag_flag_get()) printf("[DIAG]"fmt"\n", args) 
 
 char* sfp_control_to_str(int value);
+
+int
+index_to_psu_busid(int index);
 
 #endif  /* __PLATFORM_LIB_H__ */

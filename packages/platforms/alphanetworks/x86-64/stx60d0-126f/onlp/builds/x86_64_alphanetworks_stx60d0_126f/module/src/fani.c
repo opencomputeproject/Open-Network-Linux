@@ -31,26 +31,25 @@
 
 #define DEBUG                           0
 
+#define CPLD_FAN1_STATUS_ADDR_OFFSET    0x11  //bit 0: Fan 0 Direction, bit 1: Fan 0 Present
+#define CPLD_FAN2_STATUS_ADDR_OFFSET    0x12  //bit 0: Fan 1 Direction, bit 1: Fan 1 Present
+#define CPLD_FAN3_STATUS_ADDR_OFFSET    0x13
+#define CPLD_FAN4_STATUS_ADDR_OFFSET    0x14
 
-#define CPLD_FAN1_STATUS_ADDR_OFFSET    0x14  //bit 0: Fan 0 Direction, bit 1: Fan 0 Present
-#define CPLD_FAN2_STATUS_ADDR_OFFSET    0x13  //bit 0: Fan 1 Direction, bit 1: Fan 1 Present
-#define CPLD_FAN3_STATUS_ADDR_OFFSET    0x12
-#define CPLD_FAN4_STATUS_ADDR_OFFSET    0x11
+#define BMC_FAN1_SENSOR_NUM                 0x31
+#define BMC_FAN2_SENSOR_NUM                 0x32
+#define BMC_FAN3_SENSOR_NUM                 0x33
+#define BMC_FAN4_SENSOR_NUM                 0x34
+
+#define BMC_FAN1_PWM_NUM                 0x01
+#define BMC_FAN2_PWM_NUM                 0x02
+#define BMC_FAN3_PWM_NUM                 0x03
+#define BMC_FAN4_PWM_NUM                 0x04
 
 #define CPLD_FAN1_SPEED_ADDR_OFFSET   0x1A
 #define CPLD_FAN2_SPEED_ADDR_OFFSET   0x19
 #define CPLD_FAN3_SPEED_ADDR_OFFSET   0x18
 #define CPLD_FAN4_SPEED_ADDR_OFFSET   0x17
-
-#define BMC_FAN1_SENSOR_NUM                 0x34 //0x31
-#define BMC_FAN2_SENSOR_NUM                 0x33//0x32
-#define BMC_FAN3_SENSOR_NUM                 0x32 //0x33
-#define BMC_FAN4_SENSOR_NUM                 0x31 //0x34
-
-#define BMC_FAN1_PWM_NUM                 0x04 //0x01
-#define BMC_FAN2_PWM_NUM                 0x03 //0x02
-#define BMC_FAN3_PWM_NUM                 0x02 //0x03
-#define BMC_FAN4_PWM_NUM                 0x01 //0x04
 
 #define CPLD_FAN_MIN_RPS_ADDR_OFFSET        0x22
 #define CPLD_FAN_PWM_ADDR_OFFSET            0x23
@@ -302,21 +301,13 @@ _onlp_fani_info_get_fan_on_psu(int local_id, onlp_fan_info_t *info)
     DIAG_PRINT("%s, local_id=%d", __FUNCTION__, local_id);
 
     /* Get PSU fan speed */
-    switch (local_id + PSU_ID_OFFSET)
-    {
-        case PSU1_BUS_ID:
-            ret = i2c_read_word(PSU1_BUS_ID, PSU_PMBus_ADDR, READ_FAN_SPEED_REG);
-            if (ret < 0 && DEBUG)
-                AIM_LOG_INFO("%s:%d fail[%d]\n", __FUNCTION__, __LINE__, ret);
+    int psu_busid=0; 
+    psu_busid = index_to_psu_busid(local_id - FAN_4);
 
-            break;
-        case PSU2_BUS_ID:
-            ret = i2c_read_word(PSU2_BUS_ID, PSU_PMBus_ADDR, READ_FAN_SPEED_REG);
-            if (ret < 0 && DEBUG)
-                AIM_LOG_INFO("%s:%d fail[%d]\n", __FUNCTION__, __LINE__, ret);
+    ret = i2c_read_word(psu_busid, PSU_PMBus_ADDR, READ_FAN_SPEED_REG);
+    if (ret < 0 && DEBUG)
+        AIM_LOG_INFO("%s:%d fail[%d]\n", __FUNCTION__, __LINE__, ret);
 
-            break;
-    }
 
     //printf("[%s]local_id:%d i2c read ret:%d\n",__FUNCTION__, local_id, ret);
 
