@@ -1,0 +1,1 @@
+!include $ONL_TEMPLATES/no-platform-modules.yml ARCH=amd64 VENDOR=alphanetworks BASENAME=x86-64-alphanetworks-spx70d0-082f

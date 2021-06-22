@@ -1,0 +1,34 @@
+---
+
+######################################################################
+#
+# platform-config for SPX-70D0-082F
+#
+######################################################################
+
+x86-64-alphanetworks-spx70d0-082f-r0:
+
+  grub:
+
+    serial: >-
+      --port=0x2f8
+      --speed=115200
+      --word=8
+      --parity=no
+      --stop=1
+
+    kernel:
+      <<: *kernel-4-14
+
+    args: >-
+      nopat
+      intel_iommu=off
+      initcall_blacklist=pca953x_init
+      modprobe.blacklist=i2c-ismt
+      console=ttyS1,115200n8
+
+  ##network
+  ##  interfaces:
+  ##    ma1:
+  ##      name: ~
+  ##      syspath: pci0000:00/0000:00:14.0
