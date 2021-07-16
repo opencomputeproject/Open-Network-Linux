@@ -1,0 +1,76 @@
+#ifndef __SFF_QSFP_H
+#define __SFF_QSFP_H
+
+/*it follows sff 8636 spec and 8024 rev 4.6*/
+
+#define QSFP_ID_OFFSET (0)
+#define QSFP_LANE_NUM (4)
+#define DATA_NOT_READY_BIT (0)
+#define FLAT_MEM_BIT    (2)
+#define CDR_RX_PRS_BIT (2)
+#define CDR_TX_PRS_BIT (3)
+#define QSFP_ETH_COMP_EXT_BIT (7)
+
+#define QSFP_LN_MONITOR_NUM (WORD_SIZE * QSFP_LANE_NUM)
+#define QSFP_LN_CTRL_NUM (WORD_SIZE)
+#define QSFP_INTR_FLAG_NUM (19)
+#define QSFP_RXLOS_BIT_1ST (0)
+#define QSFP_RXLOS_BIT_NUM (4)
+typedef enum {
+
+    QSFP_REG_UNKNOWN,
+    QSFP_REG_ID,
+    QSFP_REG_ST_INDICATOR2,
+    QSFP_REG_TEMP,
+    QSFP_REG_VCC,
+    QSFP_REG_LN_MONITOR_RX_PWR,
+    QSFP_REG_LN_MONITOR_TX_BIAS,
+    QSFP_REG_LN_MONITOR_TX_PWR,
+    QSFP_REG_TXDISABLE,
+    QSFP_REG_CDR_CONTROL,
+    QSFP_REG_EXT_ID,
+    QSFP_REG_ETH_COMP,
+    QSFP_REG_EXT_COMP,
+    QSFP_REG_VENDOR_NAME,
+    QSFP_REG_VENDOR_PN,
+    QSFP_REG_VENDOR_REV,
+    QSFP_REG_VENDOR_SN,
+    QSFP_REG_OPT_LN_CONTROL_TX_EQ,
+    QSFP_REG_OPT_LN_CONTROL_RX_EM,
+    QSFP_REG_OPT_LN_CONTROL_RX_AM,
+    QSFP_REG_PAGE_SEL,
+    QSFP_REG_INTR_FLAG,
+    QSFP_REG_NUM
+
+} qsfp_reg_t;
+
+enum {
+    L_RX_TX_LOS_ID,
+    L_TXFAULT_ID,
+    L_RX_TX_LOL_ID,
+    L_TEMP_ALARM_WARN_ID,
+    L_VCC_ALARM_WARN_ID,
+    L_VENDOR_SPEC_ID,
+    L_RX_CH12_POWER_ALARM_WARN_ID,
+    L_RX_CH34_POWER_ALARM_WARN_ID,
+    L_TX_CH12_BIAS_ALARM_WARN_ID,
+    L_TX_CH34_BIAS_ALARM_WARN_ID,
+    L_TX_CH12_POWER_ALARM_WARN_ID,
+    L_TX_CH34_POWER_ALARM_WARN_ID,
+    L_RESERVED1_0_ID,
+    L_RESERVED1_1_ID,
+    L_RESERVED2_0_ID,
+    L_RESERVED2_1_ID,
+    L_VENDOR_SPEC2_0_ID,
+    L_VENDOR_SPEC2_1_ID,
+    L_VENDOR_SPEC2_2_ID
+};
+
+struct qsfp_priv_data {
+    u8 lane_st[LN_STATUS_NUM];
+    u8 eeprom_cache[PAGE_NUM][EEPROM_SIZE];
+    struct paging_supported_t paging_supported;
+    struct intr_flag_t intr_flag[QSFP_INTR_FLAG_NUM];
+};
+
+#endif /*__SFF_QSFP_H*/

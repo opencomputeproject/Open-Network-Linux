@@ -11,125 +11,114 @@
 
 #include "x86_64_inventec_d7032q28b_log.h"
 
-#define ONLP_NODE_MAX_INT_LEN	(8)
-#define ONLP_NODE_MAX_PATH_LEN	(64)
-
-#define INV_CPLD_COUNT		(1)
-#define INV_CPLD_PREFIX		"/sys/bus/i2c/devices/0-0055/"
-#define INV_PSOC_PREFIX		"/sys/bus/i2c/devices/0-0066/"
-#define INV_EPRM_PREFIX		"/sys/bus/i2c/devices/0-0053/"
-#define INV_CTMP_PREFIX		"/sys/devices/platform/coretemp.0/hwmon/hwmon0/"
-
-#define INV_SFP_EEPROM_UPDATE	"/sys/class/swps/module/eeprom_update"
-#define CHASSIS_SFP_COUNT	(32)
-
+/* This is definitions for x86-64-inventec-d7032q28b*/
+/* OID map*/
 /*
- * Definitions of Chassis EEPROM
+ *  SYS---------ONLP_THERMAL_CPU_PHY
+ *         |----ONLP_THERMAL_CPU_CORE0
+ *         |----ONLP_THERMAL_CPU_CORE1
+ *         |----ONLP_THERMAL_CPU_CORE2
+ *         |----ONLP_THERMAL_1_ON_MAIN_BROAD
+ *         |----ONLP_THERMAL_2_ON_MAIN_BROAD
+ *         |----ONLP_THERMAL_3_ON_MAIN_BROAD
+ *         |----ONLP_THERMAL_4_ON_MAIN_BROAD
+ *         |----ONLP_THERMAL_5_ON_MAIN_BROAD
+ *         |
+ *         |----ONLP_FAN_1
+ *         |----ONLP_FAN_2
+ *         |----ONLP_FAN_3
+ *         |----ONLP_FAN_4
+ *         |----ONLP_FAN_5
+ *         |----ONLP_FAN_6
+ *         |----ONLP_FAN_7
+ *         |----ONLP_FAN_8
+ *         |
+ *         |----ONLP_LED_FAN1
+ *         |
+ *         |----ONLP_LED_FAN2
+ *         |
+ *         |----ONLP_LED_FAN3
+ *         |
+ *         |----ONLP_LED_FAN4
+ *         |
+ *         |----ONLP_PSU_1--------ONLP_THERMAL_1_ON_PSU1
+ *         |                   |--ONLP_FAN_PSU_1
+ *         |
+ *         |----ONLP_PSU_2--------ONLP_THERMAL_1_ON_PSU2
+ *         |                   |--ONLP_FAN_PSU_2
+ *         |
+ *         |----ONLP_LED_MGMT
  */
-#define EEPROM_NODE(node)	INV_EPRM_PREFIX#node
 
-/*
- * Definitions of D7032Q28B device
- */
+#define INV_INFO_PREFIX                 "/sys/bus/i2c/devices/0-0055/"
+#define INV_HWMON_PREFIX                "/sys/bus/i2c/devices/0-0066/"
+#define INV_FAN_PREFIX                  "/sys/bus/i2c/devices/0-0066/"
+#define INV_THERMAL_PREFIX              "/sys/bus/i2c/devices/0-0066/"
+#define INV_LED_PREFIX                  "/sys/bus/i2c/devices/0-0066/"
+#define INV_PSU_PREFIX                  "/sys/bus/i2c/devices/0-0066/"
+#define INV_SFP_PREFIX		            "/sys/class/swps/"
+#define INV_EEPROM_PATH                 "/sys/bus/i2c/devices/0-0053/eeprom"
+
+#define ADD_STATE(orig_state,new_state)  orig_state | new_state
+#define REMOVE_STATE(orig_state, target) orig_state & (~target)
+#define LOCAL_ID_TO_INFO_IDX(id)  (id-1)
+
+/* Thermal definitions*/
 enum onlp_thermal_id {
-    THERMAL_RESERVED = 0,
-    THERMAL_CPU_CORE_FIRST,
-    THERMAL_CPU_CORE_3,
-    THERMAL_CPU_CORE_4,
-    THERMAL_CPU_CORE_LAST,
-    THERMAL_1_ON_MAIN_BROAD,
-    THERMAL_2_ON_MAIN_BROAD,
-    THERMAL_3_ON_MAIN_BROAD,
-    THERMAL_4_ON_MAIN_BROAD,
-    THERMAL_5_ON_MAIN_BROAD,
-    THERMAL_1_ON_PSU1,
-    THERMAL_1_ON_PSU2,
-    THERMAL_MAX
+    ONLP_THERMAL_CPU_PHY = 1,
+    ONLP_THERMAL_CPU_CORE0,
+    ONLP_THERMAL_CPU_CORE1,
+    ONLP_THERMAL_CPU_CORE2,
+    ONLP_THERMAL_1_ON_MAIN_BROAD,
+    ONLP_THERMAL_2_ON_MAIN_BROAD,
+    ONLP_THERMAL_3_ON_MAIN_BROAD,
+    ONLP_THERMAL_4_ON_MAIN_BROAD,
+    ONLP_THERMAL_5_ON_MAIN_BROAD,
+    ONLP_THERMAL_1_ON_PSU1,
+    ONLP_THERMAL_1_ON_PSU2,
+    ONLP_THERMAL_MAX  /*num limit include reserved*/
 };
-#define CHASSIS_THERMAL_COUNT	(9)
 
+/* Fan definitions*/
 enum onlp_fan_id {
-    FAN_RESERVED = 0,
-    FAN_1_ON_MAIN_BOARD,
-    FAN_2_ON_MAIN_BOARD,
-    FAN_3_ON_MAIN_BOARD,
-    FAN_4_ON_MAIN_BOARD,
-    FAN_5_ON_MAIN_BOARD,
-    FAN_6_ON_MAIN_BOARD,
-    FAN_7_ON_MAIN_BOARD,
-    FAN_8_ON_MAIN_BOARD,
-    FAN_1_ON_PSU1,
-    FAN_1_ON_PSU2,
-    FAN_MAX
+    ONLP_FAN_1 = 1,
+    ONLP_FAN_2,
+    ONLP_FAN_3,
+    ONLP_FAN_4,
+    ONLP_FAN_5,
+    ONLP_FAN_6,
+    ONLP_FAN_7,
+    ONLP_FAN_8,
+    ONLP_FAN_PSU_1,
+    ONLP_FAN_PSU_2,
+    ONLP_FAN_MAX	/*num limit include reserved*/
 };
-#define CHASSIS_FAN_COUNT	(8)
 
-enum onlp_led_id {
-    LED_RESERVED = 0,
-    LED_SYS,
-    LED_FAN1,
-    LED_FAN2,
-    LED_FAN3,
-    LED_FAN4,
-    LED_MAX
-};
-#define CHASSIS_LED_COUNT	(1)
-
+/* PSU definitions*/
 enum onlp_psu_id {
-    PSU_RESERVED = 0,
-    PSU1_ID,
-    PSU2_ID,
-    PSU_MAX
+    ONLP_PSU_1 = 1,
+    ONLP_PSU_2,
+    ONLP_PSU_MAX	/*num limit include reserved*/
 };
-#define CHASSIS_PSU_COUNT	(2)
 
-#define PSU1_AC_PMBUS_PREFIX	INV_PSOC_PREFIX
-#define PSU2_AC_PMBUS_PREFIX	INV_PSOC_PREFIX
+/* LED definitions*/
+enum onlp_led_id {
+    ONLP_LED_MGMT = 1,
+    ONLP_LED_FAN1,
+    ONLP_LED_FAN2,
+    ONLP_LED_FAN3,
+    ONLP_LED_FAN4,
+    ONLP_LED_MAX	/*num limit include reserved*/
+};
 
-#define PSU1_AC_PMBUS_NODE(node) PSU1_AC_PMBUS_PREFIX#node
-#define PSU2_AC_PMBUS_NODE(node) PSU2_AC_PMBUS_PREFIX#node
+/* platform functions*/
+#define PLATFORM_HWMON_DIAG_LOCK
+#define PLATFORM_HWMON_DIAG_UNLOCK
+int platform_hwmon_diag_enable_read(int *enable);
+int platform_hwmon_diag_enable_write(int enable);
+char* hwmon_path( char* parent_dir);
 
-#define PSU1_AC_HWMON_PREFIX	INV_CPLD_PREFIX
-#define PSU2_AC_HWMON_PREFIX	INV_CPLD_PREFIX
 
-typedef enum psu_type {
-    PSU_TYPE_UNKNOWN,
-    PSU_TYPE_AC_F2B,
-    PSU_TYPE_AC_B2F,
-    PSU_TYPE_DC_48V_F2B,
-    PSU_TYPE_DC_48V_B2F,
-    PSU_TYPE_DC_12V_FANLESS,
-    PSU_TYPE_DC_12V_F2B,
-    PSU_TYPE_DC_12V_B2F
-} psu_type_t;
-
-psu_type_t get_psu_type(int id, char* modelname, int modelname_len);
-
-#define PSU1_AC_HWMON_NODE(node) PSU1_AC_HWMON_PREFIX#node
-#define PSU2_AC_HWMON_NODE(node) PSU2_AC_HWMON_PREFIX#node
-
-/*
- * Definitions of FAN device
- */
-#define FAN_BOARD_PATH	INV_PSOC_PREFIX
-#define FAN_NODE(node)	FAN_BOARD_PATH#node
-
-/*
- * Prototypes
- */
-int onlp_file_read_binary(char *filename, char *buffer, int buf_size, int data_len);
-int onlp_file_read_string(char *filename, char *buffer, int buf_size, int data_len);
-
-int psu_pmbus_info_get(int id, char *node, int *value);
-int psu_pmbus_info_set(int id, char *node, int value);
-
-#define DEBUG_MODE 0
-
-#if (DEBUG_MODE == 1)
-    #define DEBUG_PRINT(format, ...)   printf(format, __VA_ARGS__)
-#else
-    #define DEBUG_PRINT(format, ...)
-#endif
 
 #endif  /* __PLATFORM_LIB_H__ */
 

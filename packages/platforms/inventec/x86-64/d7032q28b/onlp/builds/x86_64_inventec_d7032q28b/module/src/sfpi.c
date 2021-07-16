@@ -6,53 +6,34 @@
  ************************************************************
  *
  ***********************************************************/
-#include <onlp/platformi/sfpi.h>
 
+#include <onlp/platformi/sfpi.h>
 #include <fcntl.h> /* For O_RDWR && open */
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <onlplib/i2c.h>
-#include <onlplib/file.h>
 #include "platform_lib.h"
+#include <dirent.h>
+#include <onlplib/file.h>
 
-static char sfp_node_path[ONLP_NODE_MAX_PATH_LEN] = {0};
+#define SFP_PRESENT 0
+#define SFP_NOT_PRESENT 1
+#define MUX_START_INDEX 12
+#define QSFP_DEV_ADDR 0x50
+#define NUM_OF_QSFP_PORT 32
+#define NUM_OF_ALL_PORT (NUM_OF_QSFP_PORT)
 
-#define NUM_OF_SFP_PORT	(CHASSIS_SFP_COUNT)
-static const int sfp_mux_index[NUM_OF_SFP_PORT] = {
-22, 23, 24, 25, 26, 27, 28, 29,
-30, 31, 32, 33, 34, 35, 36, 37,
- 6,  7,  8,  9, 10, 11, 12, 13,
-14, 15, 16, 17, 18, 19, 20, 21
+static const int sfp_mux_index[] = {
+    22, 23, 24, 25, 26, 27, 28, 29,
+    30, 31, 32, 33, 34, 35, 36, 37,
+    6,  7,  8,  9, 10, 11, 12, 13,
+    14, 15, 16, 17, 18, 19, 20, 21
 };
 
-#define FRONT_PORT_TO_MUX_INDEX(port) (sfp_mux_index[port])
-
-static int
-sfp_node_read_int(char *node_path, int *value, int data_len)
-{
-    int ret = 0;
-    *value = 0;
-
-    ret = onlp_file_read_int(value, node_path);
-
-    if (ret < 0) {
-        AIM_LOG_ERROR("Unable to read status from file(%s)\r\n", node_path);
-        return ONLP_STATUS_E_INTERNAL;
-    }
-
-    return ret;
-}
-
-static char*
-sfp_get_port_path(int port, char *node_name)
-{
-    sprintf(sfp_node_path, "/sys/class/swps/port%d/%s", port, node_name);
-
-    return sfp_node_path;
-}
-
+//#define FRONT_PORT_TO_MUX_INDEX(port) (port+MUX_START_INDEX)
+#define VALIDATE_PORT(p) { if ((p < 0) || (p >= NUM_OF_ALL_PORT)) return ONLP_STATUS_E_PARAM; }
 /************************************************************
  *
  * SFPI Entry Points
@@ -65,6 +46,13 @@ onlp_sfpi_init(void)
     return ONLP_STATUS_OK;
 }
 
+int onlp_sfpi_port_map(int port, int* rport)
+{
+    VALIDATE_PORT(port);
+    *rport = port;
+    return ONLP_STATUS_OK;
+}
+
 int
 onlp_sfpi_bitmap_get(onlp_sfp_bitmap_t* bmap)
 {
@@ -74,7 +62,7 @@ onlp_sfpi_bitmap_get(onlp_sfp_bitmap_t* bmap)
     int p;
     AIM_BITMAP_CLR_ALL(bmap);
 
-    for(p = 0; p < NUM_OF_SFP_PORT; p++) {
+    for(p = 0; p < NUM_OF_ALL_PORT; p++) {
         AIM_BITMAP_SET(bmap, p);
     }
 
@@ -85,63 +73,83 @@ int
 onlp_sfpi_is_present(int port)
 {
     /*
-     * Return 1 if present.
-     * Return 0 if not present.
+     * Return 0 if present.
+     * Return 1 if not present.
      * Return < 0 if error.
      */
-    int present;
-    char* path = sfp_get_port_path(port, "present");
-    if (sfp_node_read_int(path, &present, 0) != 0) {
-        AIM_LOG_ERROR("Unable to read present status from port(%d)\r\n", port);
-        return ONLP_STATUS_E_INTERNAL;
+    VALIDATE_PORT(port);
+    int rv,present_data;
+    rv= onlp_file_read_int(&present_data, INV_SFP_PREFIX"port%d/present", port);
+    if(rv==ONLP_STATUS_OK) {
+        if( present_data== SFP_NOT_PRESENT) {
+            rv = 0;
+        } else if (present_data == SFP_PRESENT ) {
+            rv = 1;
+        } else {
+            AIM_LOG_ERROR("[ONLP][SFP] Unvalid present status %d from port(%d)\r\n",present_data,port);
+            return ONLP_STATUS_E_INTERNAL;
+        }
+    } else {
+        AIM_LOG_ERROR("[ONLP][SFP] Unable to read present status of port(%d)\n",port);
     }
-    if (present == 0) {
-	present = 1;
-    }
-    else
-    if (present == 1) {
-	present = 0;
-    }
-    else {
-        AIM_LOG_ERROR("Unvalid present status %d from port(%d)\r\n",present,port);
-        return ONLP_STATUS_E_INTERNAL;
-    }
-    return present;
+    return rv;
 }
 
 int
 onlp_sfpi_presence_bitmap_get(onlp_sfp_bitmap_t* dst)
 {
-    uint32_t presence_all = 0 ;
-    int port, ret;
-
-    for (port = 0; port < NUM_OF_SFP_PORT; port++) {
-	ret = onlp_sfpi_is_present(port);
-	if (ret == 1) {
-	    presence_all |= (1<<port);
-	}
-	else
-	if (ret == 0) {
-	    presence_all &= ~(1<<port);
-	}
-	else {
-            AIM_LOG_ERROR("Unable to read present status of port(%d).", port);
-	}
-    }
-
-    /* Populate bitmap */
-    for(port = 0; presence_all; port++) {
-        AIM_BITMAP_MOD(dst, port, (presence_all & 1));
-        presence_all >>= 1;
+    AIM_BITMAP_CLR_ALL(dst);
+    int port;
+    for(port = 0; port < NUM_OF_ALL_PORT; port++) {
+        if(onlp_sfpi_is_present(port) == 1) {
+            AIM_BITMAP_MOD(dst, port, 1);
+        } else if(onlp_sfpi_is_present(port) == 0) {
+            AIM_BITMAP_MOD(dst, port, 0);
+        } else {
+            return ONLP_STATUS_E_INTERNAL;
+        }
     }
     return ONLP_STATUS_OK;
 }
 
 int
+onlp_sfpi_is_rx_los(int port)
+{
+    /* rx los of QSFP are not supported*/
+    return ONLP_STATUS_E_UNSUPPORTED;
+}
+
+int
+onlp_sfpi_rx_los_bitmap_get(onlp_sfp_bitmap_t* dst)
+{
+    /* rx los of QSFP are not supported*/
+    return ONLP_STATUS_E_UNSUPPORTED;
+}
+
+int
+onlp_sfpi_port2chan(int port)  // port start from 0
+{
+    if( port>=0 && port<NUM_OF_ALL_PORT) {
+        return sfp_mux_index[port];
+    }
+    return ONLP_STATUS_E_INVALID;
+}
+
+int
+onlp_sfpi_dom_read(int port, uint8_t data[256])
+{
+    return ONLP_STATUS_E_UNSUPPORTED;
+}
+
+int
+onlp_sfpi_post_insert(int port, sff_info_t* info)
+{
+    return ONLP_STATUS_E_UNSUPPORTED;
+}
+
+int
 onlp_sfpi_eeprom_read(int port, uint8_t data[256])
 {
-    char* path;
-    int len = 0;
     /*
      * Read the SFP eeprom into data[]
      *
@@ -149,82 +157,110 @@ onlp_sfpi_eeprom_read(int port, uint8_t data[256])
      * Return OK if eeprom is read
      */
     memset(data, 0, 256);
-    path = sfp_get_port_path(port, "eeprom");
-    if (onlp_file_read(&data[0], 256, &len, path) < 0) {
+
+    VALIDATE_PORT(port);
+    int sts;
+    int bus = onlp_sfpi_port2chan(port);
+    sts = onlp_i2c_block_read(bus, QSFP_DEV_ADDR, 0, 256, data, ONLP_I2C_F_FORCE);
+    if(sts < 0) {
         AIM_LOG_ERROR("Unable to read eeprom from port(%d)\r\n", port);
-        return ONLP_STATUS_E_INTERNAL;
+        return ONLP_STATUS_E_MISSING;
     }
     return ONLP_STATUS_OK;
 }
 
 int
-onlp_sfpi_dom_read(int port, uint8_t data[256])
-{
-    return onlp_sfpi_eeprom_read( port, data);
-}
-
-int
 onlp_sfpi_dev_readb(int port, uint8_t devaddr, uint8_t addr)
 {
-    int bus = FRONT_PORT_TO_MUX_INDEX(port);
+    VALIDATE_PORT(port);
+    int bus = onlp_sfpi_port2chan(port);
     return onlp_i2c_readb(bus, devaddr, addr, ONLP_I2C_F_FORCE);
-}
-
-int
-onlp_inv_file_vwrite_uint(int value, const char* fmt, va_list vargs)
-{
-    int rv;
-    char* s = aim_fstrdup("%u", value);
-    rv = onlp_file_vwrite_str(s, fmt, vargs);
-    aim_free(s);
-    return rv;
-}
-
-int
-onlp_inv_file_write_uint(unsigned int value, const char* fmt, ...)
-{
-    int rv;
-    va_list vargs;
-    va_start(vargs, fmt);
-    rv = onlp_inv_file_vwrite_uint(value, fmt, vargs);
-    va_end(vargs);
-    return rv;
 }
 
 int
 onlp_sfpi_dev_writeb(int port, uint8_t devaddr, uint8_t addr, uint8_t value)
 {
-    int bus = FRONT_PORT_TO_MUX_INDEX(port);
-    int ret = onlp_i2c_writeb(bus, devaddr, addr, value, ONLP_I2C_F_FORCE);
-
-    if (ret == 0)  {
-	if (onlp_inv_file_write_uint((1 << port), INV_SFP_EEPROM_UPDATE) == 0) {
-	    return ONLP_STATUS_OK;
-	}
-    }
-    AIM_LOG_ERROR("Unable to read eeprom_update from port(%d)\r\n", port);
-    return ret;
+    VALIDATE_PORT(port);
+    int bus = onlp_sfpi_port2chan(port);
+    return onlp_i2c_writeb(bus, devaddr, addr, value, ONLP_I2C_F_FORCE);
 }
 
 int
 onlp_sfpi_dev_readw(int port, uint8_t devaddr, uint8_t addr)
 {
-    int bus = FRONT_PORT_TO_MUX_INDEX(port);
+    VALIDATE_PORT(port);
+    int bus = onlp_sfpi_port2chan(port);
     return onlp_i2c_readw(bus, devaddr, addr, ONLP_I2C_F_FORCE);
 }
 
 int
 onlp_sfpi_dev_writew(int port, uint8_t devaddr, uint8_t addr, uint16_t value)
 {
-    int bus = FRONT_PORT_TO_MUX_INDEX(port);
-    int ret = onlp_i2c_writew(bus, devaddr, addr, value, ONLP_I2C_F_FORCE);
+    VALIDATE_PORT(port);
+    int bus = onlp_sfpi_port2chan(port);
+    return onlp_i2c_writew(bus, devaddr, addr, value, ONLP_I2C_F_FORCE);
+}
 
-    if (ret == 0)  {
-	if (onlp_inv_file_write_uint((1 << port), INV_SFP_EEPROM_UPDATE) == 0) {
-	    return ONLP_STATUS_OK;
-	}
+int
+onlp_sfpi_control_supported(int port, onlp_sfp_control_t control, int* rv)
+{
+    *rv = 0;
+    if(port >= 0 && port < NUM_OF_QSFP_PORT) {
+        switch (control) {
+        case ONLP_SFP_CONTROL_RESET_STATE:
+        case ONLP_SFP_CONTROL_LP_MODE:
+            *rv = 1;
+            break;
+        default:
+            break;
+        }
     }
-    AIM_LOG_ERROR("Unable to read eeprom_update from port(%d)\r\n", port);
+    return ONLP_STATUS_OK;
+}
+
+int
+onlp_sfpi_control_set(int port, onlp_sfp_control_t control, int value)
+{
+    int ret = ONLP_STATUS_E_UNSUPPORTED;
+
+    if(port >= 0 && port < NUM_OF_QSFP_PORT) {
+        switch (control) {
+        case ONLP_SFP_CONTROL_RESET_STATE:
+            ret = onlp_file_write_int(value, INV_SFP_PREFIX"port%d/reset", port);
+            break;
+        case ONLP_SFP_CONTROL_LP_MODE:
+            ret = onlp_file_write_int(value, INV_SFP_PREFIX"port%d/lpmod", port);
+            break;
+        default:
+            break;
+        }
+    }
+    return ret;
+}
+
+int
+onlp_sfpi_control_get(int port, onlp_sfp_control_t control, int* value)
+{
+    int ret = ONLP_STATUS_E_UNSUPPORTED;
+
+    if(port >= 0 && port < NUM_OF_QSFP_PORT) {
+        switch (control) {
+        /*the value of /port(id)/reset
+        0: in reset state; 1:not in reset state*/
+        case ONLP_SFP_CONTROL_RESET_STATE:
+            ret = onlp_file_read_int(value, INV_SFP_PREFIX"port%d/reset", port);
+            *value=(!(*value));
+            break;
+        case ONLP_SFP_CONTROL_LP_MODE:
+            ret = onlp_file_read_int(value, INV_SFP_PREFIX"port%d/lpmod", port);
+            break;
+        default:
+            break;
+        }
+    } else {
+        ret=ONLP_STATUS_E_INVALID;
+        AIM_LOG_ERROR("[ONLP][SFP] Invalid port id in %s\n",__FUNCTION__);
+    }
     return ret;
 }
 
@@ -234,3 +270,14 @@ onlp_sfpi_denit(void)
     return ONLP_STATUS_OK;
 }
 
+void
+onlp_sfpi_debug(int port, aim_pvs_t* pvs)
+{
+    aim_printf(pvs, "Debug data for port %d goes here.", port);
+}
+
+int
+onlp_sfpi_ioctl(int port, va_list vargs)
+{
+    return ONLP_STATUS_E_UNSUPPORTED;
+}

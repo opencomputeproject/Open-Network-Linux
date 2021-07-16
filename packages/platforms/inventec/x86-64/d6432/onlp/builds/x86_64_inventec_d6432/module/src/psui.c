@@ -28,11 +28,6 @@ typedef enum hwmon_psu_state_e {
 
 #define PSU_CAPS ONLP_PSU_CAPS_VIN|ONLP_PSU_CAPS_VOUT|ONLP_PSU_CAPS_IIN|ONLP_PSU_CAPS_IOUT|ONLP_PSU_CAPS_PIN| ONLP_PSU_CAPS_POUT
 
-char* psu_i2c_addr[ONLP_PSU_MAX]= {
-    "",
-    "58",
-    "59"
-};
 
 /*
  * Get all information about the given PSU oid.
@@ -71,7 +66,7 @@ onlp_psui_info_get(onlp_oid_t id, onlp_psu_info_t* info)
     int len;
     int psu_id = ONLP_OID_ID_GET(id);
     uint8_t buf[ONLP_CONFIG_INFO_STR_MAX] = {0};
-    char path[ONLP_CONFIG_INFO_STR_MAX];
+    char psu_path[ONLP_CONFIG_INFO_STR_MAX];
 
     VALIDATE(id);
 
@@ -86,44 +81,44 @@ onlp_psui_info_get(onlp_oid_t id, onlp_psu_info_t* info)
     }
 
     if(info->status & ONLP_PSU_STATUS_PRESENT) {
-        snprintf(path,ONLP_CONFIG_INFO_STR_MAX, INV_DEVICE_BASE"%d-00%s/",PSU_I2C_CHAN,psu_i2c_addr[psu_id]);
+        snprintf(psu_path,ONLP_CONFIG_INFO_STR_MAX,"/var/psu%d/device/",psu_id);
 
         memset(buf, 0, ONLP_CONFIG_INFO_STR_MAX);
-        ret=onlp_file_read( buf, ONLP_CONFIG_INFO_STR_MAX, &len, "%smfr_id", path );
+        ret=onlp_file_read( buf, ONLP_CONFIG_INFO_STR_MAX, &len, "%smfr_id", psu_path );
         if(ret==ONLP_STATUS_OK) {
             buf[strlen((char*)buf)-1] = 0;
             snprintf(info->model, ONLP_CONFIG_INFO_STR_MAX, "%s", buf);
         }
-
+        
         memset(buf, 0, ONLP_CONFIG_INFO_STR_MAX);
-        ret=onlp_file_read( buf, ONLP_CONFIG_INFO_STR_MAX, &len, "%smfr_serial_number", path );
+        ret=onlp_file_read( buf, ONLP_CONFIG_INFO_STR_MAX, &len, "%smfr_serial_number", psu_path);
         if(ret==ONLP_STATUS_OK) {
             buf[strlen((char*)buf)-1] = 0;
             snprintf(info->serial, ONLP_CONFIG_INFO_STR_MAX, "%s", buf);
         }
 
         if(ret==ONLP_STATUS_OK) {
-            ret=onlp_file_read_int( &info->mvin, "%sin1_input", path );
+            ret=onlp_file_read_int( &info->mvin, "%sin1_input", psu_path);
         }
 
         if(ret==ONLP_STATUS_OK) {
-            ret=onlp_file_read_int( &info->mvout, "%sin2_input", path );
+            ret=onlp_file_read_int( &info->mvout, "%sin2_input", psu_path );
         }
 
         if(ret==ONLP_STATUS_OK) {
-            ret=onlp_file_read_int( &info->miin, "%scurr1_input", path );
+            ret=onlp_file_read_int( &info->miin, "%scurr1_input",psu_path );
         }
 
         if(ret==ONLP_STATUS_OK) {
-            ret=onlp_file_read_int( &info->miout, "%scurr2_input", path );
+            ret=onlp_file_read_int( &info->miout, "%scurr2_input" ,psu_path);
         }
 
         if(ret==ONLP_STATUS_OK) {
-            ret=onlp_file_read_int( &info->mpin, "%spower1_input", path );
+            ret=onlp_file_read_int( &info->mpin, "%spower1_input",psu_path);
         }
 
         if(ret==ONLP_STATUS_OK) {
-            ret=onlp_file_read_int( &info->mpout, "%spower2_input", path );
+            ret=onlp_file_read_int( &info->mpout, "%spower2_input",psu_path);
         }
     }
 

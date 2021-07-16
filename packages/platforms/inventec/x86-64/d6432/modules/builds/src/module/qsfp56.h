@@ -1,0 +1,76 @@
+#ifndef __SFF_QSFP56_H
+#define __SFF_QSFP56_H
+
+#define QSFP56_LANE_NUM (4)
+#define QSFP56_MIS_TYPE_BIT_MIN (4)
+#define QSFP56_MIS_TYPE_BIT_NUM (2)
+#define QSFP56_FLAT_MEM_BIT (7)
+#define QSFP56_MODULE_ST_BIT_MIN (1)
+#define QSFP56_MODULE_ST_BIT_NUM (3)
+
+#define QSFP56_REG_LN_MONITOR_NUM (QSFP56_LANE_NUM * WORD_SIZE)
+#define QSFP56_INTR_LN_FLAG_NUM (19)
+#define QSFP56_INTR_MODULE_FLAG_NUM (6)
+
+enum {
+    MIS_TYPE_CMIS = 0,
+    MIS_TYPE_ACMIS,
+    MIS_TYPE_SFF_8636,
+    MIS_TYPE_OTHERS
+};
+
+typedef enum {
+    QSFP56_REG_UNKNOWN,
+    QSFP56_REG_ID,
+    QSFP56_REG_CMIS_REV,
+    QSFP56_REG_ST_INDICATOR2,
+    QSFP56_REG_MODULE_GLOBAL_CONTROL,
+    QSFP56_REG_BANK_SEL,
+    QSFP56_REG_MODULE_TYPE,
+    QSFP56_REG_PAGE_SEL,
+    QSFP56_REG_INTR_MODULE_FLAG,
+    QSFP56_REG_DATA_PATH_DEINIT,
+    QSFP56_REG_DATA_PATH_PWR_UP,
+    QSFP56_REG_TXDISABLE,
+    QSFP56_REG_VCC,
+    QSFP56_REG_TEMP,
+    QSFP56_REG_STAGE_CTRL_SET0_APP_SEL,
+    QSFP56_REG_STAGE_CTRL_SET0_DATA_PATH_INIT,
+    QSFP56_REG_DATA_PATH_ST,
+    QSFP56_REG_CONFIG_ERR_CODE,
+    QSFP56_REG_ACTIVE_CTRL_SET,
+    QSFP56_REG_LN_MONITOR_TX_PWR,
+    QSFP56_REG_LN_MONITOR_RX_PWR,
+    QSFP56_REG_LN_MONITOR_TX_BIAS,
+    QSFP56_REG_VENDOR_NAME,
+    QSFP56_REG_VENDOR_PN,
+    QSFP56_REG_VENDOR_SN,
+    QSFP56_REG_VENDOR_REV,
+    QSFP56_REG_MODULE_ST_INTR,
+    QSFP56_REG_INTR_LN_FLAG,
+    QSFP56_REG_NUM
+} qsfp56_reg_t;
+
+typedef enum {
+    QSFP56_APSEL_1,
+    QSFP56_APSEL_2,
+    QSFP56_APSEL_NUM,
+} qsfp56_apsel_code_t;
+
+/*app_advert_field*/
+#define QSFP56_APP_ADVERT_FIELD_NUM (5)
+struct qsfp56_app_advert_fields_t {
+
+    u8 host_electrical_interface_code;
+    u8 module_media_interface_code;
+    u8 lane_count;
+    u8 host_lane_assignment_options;
+    u8 media_lane_assignment_options;
+};
+
+union qsfp56_app_advert_fields {
+
+    struct qsfp56_app_advert_fields_t data;
+    u8 reg[QSFP56_APP_ADVERT_FIELD_NUM];
+};
+#endif /*__SFF_QSFP56_H*/

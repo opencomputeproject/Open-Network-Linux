@@ -1,0 +1,81 @@
+#ifndef __SFF_SFP_H
+#define __SFF_SFP_H
+
+/*reg map*/
+/*0x50*/
+#define SFP_ID_OFFSET (0)
+#define SFP_CONN_OFFSET (2)
+#define SFP_TRANSVR_CODE_OFFSET (3)
+#define SFP_RATE_ID_OFFSET (13)
+#define SFP_ETH_EXT_COMP_OFFSET (36)
+#define SFP_VENDOR_NAME_OFFSET (20)
+#define SFP_VENDOR_PN_OFFSET (40)
+#define SFP_VENDOR_SN_OFFSET (68)
+#define SFP_VENDOR_REV_OFFSET (56)
+
+#define SFP_VENDOR_NAME_LEN (16)
+#define SFP_VENDOR_PN_LEN (16)
+#define SFP_VENDOR_SN_LEN (16)
+#define SFP_VENDOR_REV_LEN (4)
+
+/*0x51*/
+#define SFP_DDM_TEMP_OFFSET (96)
+#define SFP_DDM_VCC_OFFSET (98)
+#define SFP_DDM_TX_BIAS_OFFSET (100)
+#define SFP_DDM_TX_POWER_OFFSET (102)
+#define SFP_DDM_RX_POWER_OFFSET (104)
+#define SFP_ST_CTRL_OFFSET (110)
+#define SFP_EXT_ST_CTRL_OFFSET (118)
+#define SFP_TX_EQ_OFFSET (114)
+#define SFP_RX_EM_OFFSET (115)
+
+#define SFP_SOFT_RS0_SEL_BIT (3)
+#define SFP_SOFT_RS1_SEL_BIT (3)
+
+/*check SFP+ Cable Technology*/
+/*offset 8, bit2: Passive Cable *8
+*          bit3: Active Cable *8 */
+#define PASSIVE_CABLE_BIT (2)
+#define ACTIVE_CABLE_BIT (3)
+
+typedef enum {
+    SFP_REG_UNKNOWN,
+    SFP_REG_ID,
+    SFP_REG_CONN,
+    SFP_REG_TRANSVR_CODE,
+    SFP_REG_RATE_ID,
+    SFP_REG_EXT_COMP,
+    SFP_REG_VENDOR_NAME,
+    SFP_REG_VENDOR_PN,
+    SFP_REG_VENDOR_SN,
+    SFP_REG_VENDOR_REV,
+    SFP_REG_DDM_TEMP,
+    SFP_REG_DDM_VCC,
+    SFP_REG_DDM_TX_BIAS,
+    SFP_REG_DDM_TX_POWER,
+    SFP_REG_DDM_RX_POWER,
+    SFP_REG_ST_CTRL,
+    SFP_REG_EXT_ST_CTRL,
+    SFP_REG_TX_EQ,
+    SFP_REG_RX_EM,
+    SFP_REG_NUM
+} sfp_reg_t;
+/*so far it's for sfp only*/
+typedef enum {
+    SOFT_RX_RATE_RS0 = 1 << 0,
+    SOFT_TX_RATE_RS1 = 1 << 1,
+} rate_control_t;
+
+enum {
+    TRANSVR_CODE_INFI_10G_COMP,
+    TRANSVR_CODE_SONET_ESCON_COMP,
+    TRANSVR_CODE_SONET2_COMP,
+    TRANSVR_CODE_ETH_COMP,
+    TRANSVR_CODE_FIBRE_CH_TECH_LINK_LEN,
+    TRANSVR_CODE_SFP_PLUS_TECH_FIBRE_CH_TECH2,
+    TRANSVR_CODE_FIBRE_CH_TRANS_MEDIA,
+    TRANSVR_CODE_FIBRE_CH_SPEED,
+    TRANSVR_CODE_NUM
+};
+
+#endif /*__SFF_SFP_H*/

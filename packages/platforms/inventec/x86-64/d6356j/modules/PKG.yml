@@ -1,0 +1,1 @@
+!include $ONL_TEMPLATES/platform-modules.yml VENDOR=inventec BASENAME=x86-64-inventec-d6356j ARCH=amd64 KERNELS="onl-kernel-4.14-lts-x86-64-all:amd64"

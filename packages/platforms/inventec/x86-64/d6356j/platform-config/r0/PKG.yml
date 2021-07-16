@@ -1,0 +1,1 @@
+!include $ONL_TEMPLATES/platform-config-platform.yml ARCH=amd64 VENDOR=inventec BASENAME=x86-64-inventec-d6356j REVISION=r0
