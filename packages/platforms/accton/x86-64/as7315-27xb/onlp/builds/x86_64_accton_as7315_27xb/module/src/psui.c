@@ -143,15 +143,33 @@ onlp_psui_info_get(onlp_oid_t id, onlp_psu_info_t* info)
 
     /* Read voltage, current and power */
     val = 0;
+    if (onlp_file_read_int(&val, PSU_SYSFS_PATH"psu_v_in", bus, offset) == 0 && val) {
+        info->mvin = val;
+        info->caps |= ONLP_PSU_CAPS_VIN;
+    }
+
+    val = 0;
     if (onlp_file_read_int(&val, PSU_SYSFS_PATH"psu_v_out", bus, offset) == 0 && val) {
         info->mvout = val;
         info->caps |= ONLP_PSU_CAPS_VOUT;
     }
 
     val = 0;
+    if (onlp_file_read_int(&val, PSU_SYSFS_PATH"psu_i_in", bus, offset) == 0 && val) {
+        info->miin = val;
+        info->caps |= ONLP_PSU_CAPS_IIN;
+    }
+
+    val = 0;
     if (onlp_file_read_int(&val, PSU_SYSFS_PATH"psu_i_out", bus, offset) == 0 && val) {
         info->miout = val;
         info->caps |= ONLP_PSU_CAPS_IOUT;
+    }
+
+    val = 0;
+    if (onlp_file_read_int(&val, PSU_SYSFS_PATH"psu_p_in", bus, offset) == 0 && val) {
+        info->mpin = val;
+        info->caps |= ONLP_PSU_CAPS_PIN;
     }
 
     val = 0;

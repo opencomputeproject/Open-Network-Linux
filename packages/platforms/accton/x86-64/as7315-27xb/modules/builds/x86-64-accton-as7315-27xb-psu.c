@@ -70,17 +70,18 @@ enum as7315_27xb_psu_sysfs_attributes {
 };
 
 enum psu_type {
-    PSU_YM_1401_A,      /* AC110V - B2F */
-    PSU_YM_2401_JCR,    /* AC110V - F2B */
-    PSU_YM_2401_JDR,    /* AC110V - B2F */
-    PSU_YM_2401_TCR,    /* AC110V - B2F */
-    PSU_CPR_4011_4M11,  /* AC110V - F2B */
-    PSU_CPR_4011_4M21,  /* AC110V - B2F */
-    PSU_CPR_6011_2M11,  /* AC110V - F2B */
-    PSU_CPR_6011_2M21,  /* AC110V - B2F */
-    PSU_UM400D_01G,     /* DC48V  - F2B */
-    PSU_UM400D01_01G,   /* DC48V  - B2F */
-    PSU_BEL_TOT12,     /* DC48V  - N/A */
+    PSU_YM_1401_A,          /* AC110V - B2F */
+    PSU_YM_2401_JCR,        /* AC110V - F2B */
+    PSU_YM_2401_JDR,        /* AC110V - B2F */
+    PSU_YM_2401_TCR,        /* AC110V - B2F */
+    PSU_CPR_4011_4M11,      /* AC110V - F2B */
+    PSU_CPR_4011_4M21,      /* AC110V - B2F */
+    PSU_CPR_6011_2M11,      /* AC110V - F2B */
+    PSU_CPR_6011_2M21,      /* AC110V - B2F */
+    PSU_UM400D_01G,         /* DC48V  - F2B */
+    PSU_UM400D01_01G,       /* DC48V  - B2F */
+    PSU_BEL_TOT12,          /* DC48V  - N/A */
+    PSU_BEL_SPAACTN_03BG,   /* AC110V - N/A */
     PSU_TYPE_MAX
 };
 
@@ -93,17 +94,18 @@ struct model_info {
 };
 
 struct model_info models[] = {
-    {PSU_BEL_TOT12,     0x0A, "CRXT-T0T12",0x18, 8},
-    {PSU_YM_1401_A,     0x20, "YM-1401ACR",0x35,MAX_OUTPUT_LENGTH},
-    {PSU_YM_2401_JCR,   0x20, "YM-2401JCR",0x35,MAX_OUTPUT_LENGTH},
-    {PSU_YM_2401_JDR,   0x20, "YM-2401JDR",0x35,MAX_OUTPUT_LENGTH},
-    {PSU_YM_2401_TCR,   0x20, "YM-2401TCR",0x35,MAX_OUTPUT_LENGTH},
-    {PSU_CPR_4011_4M11, 0x26, "CPR-4011-4M11",0x47,MAX_OUTPUT_LENGTH},
-    {PSU_CPR_4011_4M21, 0x26, "CPR-4011-4M21",0x47,MAX_OUTPUT_LENGTH},
-    {PSU_CPR_6011_2M11, 0x26, "CPR-6011-2M11",0x46,MAX_OUTPUT_LENGTH},
-    {PSU_CPR_6011_2M21, 0x26, "CPR-6011-2M21",0x46,MAX_OUTPUT_LENGTH},
-    {PSU_UM400D_01G,    0x50, "um400d01G",0x50,MAX_OUTPUT_LENGTH},
-    {PSU_UM400D01_01G,  0x50, "um400d01-01G",0x50,MAX_OUTPUT_LENGTH},
+    {PSU_BEL_TOT12,         0x0A, "CRXT-T0T12",0x18, 8},
+    {PSU_BEL_SPAACTN_03BG,  0x0A, "SPAACTN-03BG",0x18, 8},
+    {PSU_YM_1401_A,         0x20, "YM-1401ACR",0x35,MAX_OUTPUT_LENGTH},
+    {PSU_YM_2401_JCR,       0x20, "YM-2401JCR",0x35,MAX_OUTPUT_LENGTH},
+    {PSU_YM_2401_JDR,       0x20, "YM-2401JDR",0x35,MAX_OUTPUT_LENGTH},
+    {PSU_YM_2401_TCR,       0x20, "YM-2401TCR",0x35,MAX_OUTPUT_LENGTH},
+    {PSU_CPR_4011_4M11,     0x26, "CPR-4011-4M11",0x47,MAX_OUTPUT_LENGTH},
+    {PSU_CPR_4011_4M21,     0x26, "CPR-4011-4M21",0x47,MAX_OUTPUT_LENGTH},
+    {PSU_CPR_6011_2M11,     0x26, "CPR-6011-2M11",0x46,MAX_OUTPUT_LENGTH},
+    {PSU_CPR_6011_2M21,     0x26, "CPR-6011-2M21",0x46,MAX_OUTPUT_LENGTH},
+    {PSU_UM400D_01G,        0x50, "um400d01G",0x50,MAX_OUTPUT_LENGTH},
+    {PSU_UM400D01_01G,      0x50, "um400d01-01G",0x50,MAX_OUTPUT_LENGTH},
 };
 
 static ssize_t show_index(struct device *dev, struct device_attribute *da, char *buf);
